@@ -112,6 +112,7 @@ window.mdpeek = (() => {
     else if (anchor) restoreScrollAnchor(anchor);
     else window.scrollTo(0, 0);
     reflowAnchor = scrollAnchor();
+    centerAnchor = viewCenterAnchor();
     postOutline();
     updateSection(true);
     if (preserveScroll && !quiet) showToast("Reloaded — file changed on disk");
@@ -512,8 +513,11 @@ window.mdpeek = (() => {
   const signature = (block) => `${block.tagName}:${block.textContent}`;
 
   // Keeps the text at the top of the window in place when the window's width changes (resized,
-  // or the sidebar or editor toggled) and the text reflows.
+  // or the sidebar or editor toggled) and the text reflows. While the page is magnified (pinch
+  // to zoom), only part of it shows: the point at the center of the window stays there instead,
+  // since the page's centered layout moves sideways as it widens.
   let reflowAnchor = null;
+  let centerAnchor = null;
   let reflowAnchorScheduled = false;
   addEventListener("scroll", () => {
     if (reflowAnchorScheduled) return;
@@ -521,13 +525,31 @@ window.mdpeek = (() => {
     requestAnimationFrame(() => {
       reflowAnchorScheduled = false;
       reflowAnchor = scrollAnchor();
+      centerAnchor = viewCenterAnchor();
     });
   }, { passive: true });
   addEventListener("resize", () => {
     markOwnScroll();
-    if (sourceLine) scrollToSourceLine(sourceLine);
+    if (centerAnchor) restoreViewCenter(centerAnchor);
+    else if (sourceLine) scrollToSourceLine(sourceLine);
     else if (reflowAnchor) restoreScrollAnchor(reflowAnchor);
   });
+
+  // The element at the center of the window and where in it the center is, while magnified.
+  function viewCenterAnchor() {
+    if (visualViewport.scale <= 1) return null;
+    const element = document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    return { element, x: (innerWidth / 2 - rect.left) / rect.width, y: (innerHeight / 2 - rect.top) / rect.height };
+  }
+
+  function restoreViewCenter(anchor) {
+    const rect = anchor.element.getBoundingClientRect();
+    window.scrollTo(
+      scrollX + rect.left + anchor.x * rect.width - innerWidth / 2,
+      scrollY + rect.top + anchor.y * rect.height - innerHeight / 2);
+  }
 
   // MARK: Scrolling with the editor
 
@@ -594,7 +616,7 @@ window.mdpeek = (() => {
       if (!rect.height) continue;
       top = rect.top + scrollY + Math.min((line - start) / (end - start + 1), 1) * rect.height;
     }
-    window.scrollTo(0, line > 1 ? top : 0);
+    window.scrollTo({ top: line > 1 ? top : 0 });
   }
 
   // The Markdown source line at the top of the window: the inverse of scrollToSourceLine.
