@@ -132,10 +132,6 @@ window.mdpeek = (() => {
   let dragDepth = 0;
   addEventListener("dragenter", () => document.body.classList.toggle("dragging", ++dragDepth > 0));
   addEventListener("dragleave", () => document.body.classList.toggle("dragging", --dragDepth > 0));
-  addEventListener("drop", () => {
-    dragDepth = 0;
-    document.body.classList.remove("dragging");
-  });
 
   // MARK: Outline
 

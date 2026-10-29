@@ -13,7 +13,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     private static let zoomLevels: [CGFloat] = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3]
 
     private let pageURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")!
-    private var webView: WKWebView!
+    private var webView: DropTargetWebView!
     private let statusBar = StatusBarView()
     private var isPageLoaded = false
     private var document: (url: URL, data: Data)?
@@ -38,8 +38,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     override func loadView() {
         let configuration = WKWebViewConfiguration()
         configuration.userContentController.add(WeakScriptMessageHandler(self), name: "mdpeek")
-        webView = WKWebView(frame: .zero, configuration: configuration)
+        webView = DropTargetWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self
+        webView.onDropMarkdown = { [weak self] url in self?.onOpenMarkdown?(url) }
         webView.allowsMagnification = true
         webView.isInspectable = true
 
@@ -227,19 +228,38 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         guard let url = navigationAction.request.url else { return .cancel }
         // In-page anchors (headings, footnotes) are fragment navigations within index.html.
         if url.isFileURL && url.path == pageURL.path { return .allow }
-        let isMarkdown = url.isFileURL && Markdown.fileExtensions.contains(url.pathExtension.lowercased())
-        // A file dropped on the view arrives as a navigation to that file.
-        if isMarkdown && navigationAction.navigationType == .other && navigationAction.targetFrame?.isMainFrame == true {
-            onOpenMarkdown?(url)
-            return .cancel
-        }
         guard navigationAction.navigationType == .linkActivated else { return .cancel }
-        if isMarkdown {
+        if url.isFileURL && Markdown.fileExtensions.contains(url.pathExtension.lowercased()) {
             onOpenMarkdown?(url)
         } else {
             NSWorkspace.shared.open(url)
         }
         return .cancel
+    }
+}
+
+/// Opens Markdown files dropped on the view. WebKit does not load dropped files in apps built
+/// against current SDKs, so the drop is handled here instead of by the page.
+private final class DropTargetWebView: WKWebView {
+    var onDropMarkdown: ((URL) -> Void)?
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        let operation = super.draggingUpdated(sender)
+        return markdownURL(in: sender) == nil ? operation : .copy
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard let url = markdownURL(in: sender) else { return super.performDragOperation(sender) }
+        // Ends the page's side of the drag, so it removes its drop highlight.
+        super.draggingExited(sender)
+        onDropMarkdown?(url)
+        return true
+    }
+
+    private func markdownURL(in info: NSDraggingInfo) -> URL? {
+        let urls = info.draggingPasteboard.readObjects(
+            forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]
+        return urls?.first { Markdown.fileExtensions.contains($0.pathExtension.lowercased()) }
     }
 }
 
