@@ -17,13 +17,37 @@
 <section id="welcome" hidden>
   <div class="welcome-grid">
     <section class="start" aria-labelledby="start-title">
-      <img src="icon.svg" width="104" height="104" alt="">
-      <h1 id="start-title">Ogle at any Markdown file</h1>
-      <div class="drop-zone">
-        <p>Drop a .md file here</p>
-        <button type="button" class="primary" data-action="open">Open File…</button>
+      <div class="start-header">
+        <svg class="start-eye" viewBox="0 0 120 120" width="96" height="96" aria-hidden="true">
+          <defs>
+            <radialGradient id="eye-white" cx="0.45" cy="0.4" r="0.6"><stop offset="0.6" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4E4DB"/></radialGradient>
+            <radialGradient id="eye-iris" cx="0.5" cy="0.5" r="0.5" fx="0.4" fy="0.35"><stop offset="0" stop-color="#E4FF9A"/><stop offset="0.55" stop-color="#C6F05A"/><stop offset="0.85" stop-color="#93B82C"/><stop offset="1" stop-color="#5F7A15"/></radialGradient>
+            <radialGradient id="eye-pupil" cx="0.5" cy="0.5" r="0.5" fx="0.42" fy="0.38"><stop offset="0" stop-color="#3A3F47"/><stop offset="1" stop-color="#0B0C0E"/></radialGradient>
+            <linearGradient id="eye-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+            <filter id="eye-lift" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/></filter>
+            <clipPath id="eye-clip"><circle cx="60" cy="60" r="50"/></clipPath>
+          </defs>
+          <circle cx="60" cy="60" r="50" fill="url(#eye-white)"/>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="#000000" stroke-opacity="0.1" stroke-width="4"/>
+          <g clip-path="url(#eye-clip)">
+            <circle cx="66" cy="74" r="32" fill="url(#eye-iris)" filter="url(#eye-lift)"/>
+            <circle cx="68" cy="80" r="13" fill="url(#eye-pupil)"/>
+            <ellipse cx="60" cy="62" rx="20" ry="10" fill="url(#eye-gloss)"/>
+            <circle cx="78" cy="88" r="3" fill="#FFFFFF" opacity="0.6"/>
+          </g>
+        </svg>
+        <div>
+          <h1 id="start-title">Ogle at any Markdown file</h1>
+          <p>Drop one below, open one, or pick a recent file.</p>
+        </div>
       </div>
-      <p class="hint">From a terminal: <code>ogle README.md</code></p>
+      <div class="start-body">
+        <div class="drop-zone">
+          <p>Drop a .md file here</p>
+          <button type="button" class="primary" data-action="open">Open File…</button>
+        </div>
+        <p class="hint">From a terminal: <code>ogle README.md</code></p>
+      </div>
     </section>
     <section class="quick" aria-labelledby="quick-title">
       <div class="quick-header">

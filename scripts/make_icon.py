@@ -1,7 +1,6 @@
 """Builds the Ogle icon: SVGs (text outlined to paths), PNGs at every size, and AppIcon.icns.
 
-icon.svg, with the tile drawn as a slab casting a shadow, is for showing the logo (the README,
-the start page). The app icon keeps to the standard rounded square, without the slab's edge or
+icon.svg, with the tile drawn as a slab casting a shadow, is for showing the logo (the README). The app icon keeps to the standard rounded square, without the slab's edge or
 shadow, since macOS shrinks icons of any other shape into a box in the Dock and the switcher:
 icon-app.svg, and icon-small.svg for 16 and 32 px."""
 import sys
