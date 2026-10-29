@@ -17,11 +17,7 @@
 
 ### Download
 
-Download `Ogle.zip` from the [latest release](https://github.com/hafenr/ogle/releases/latest) (Apple Silicon, macOS 15 or later), unzip it, and move `Ogle.app` to `~/Applications`. The app is not notarized by Apple, so macOS refuses to open the downloaded copy until you remove the quarantine flag:
-
-```sh
-xattr -dr com.apple.quarantine ~/Applications/Ogle.app
-```
+Download `Ogle.zip` from the [latest release](https://github.com/hafenr/ogle/releases/latest) (Apple Silicon, macOS 15 or later), unzip it, and move `Ogle.app` to `~/Applications`. Releases are signed and notarized by Apple.
 
 ### Build from source
 
@@ -70,17 +66,14 @@ defaults delete dev.ogle    # recent files and window layout
 
 ### Releasing
 
-Push a version tag. The Package workflow builds the app with that version and publishes a GitHub release with `Ogle.zip`:
+Releases are built, signed and notarized on a Mac with the Developer ID certificate, then published with the [GitHub CLI](https://cli.github.com). Save notary credentials once with `xcrun notarytool store-credentials ogle-notary`. Then, on a clean `main`:
 
 ```sh
-git tag -a v0.3.0 -m "Ogle v0.3.0" && git push origin v0.3.0
-```
-
-To sign and notarize a build yourself with a Developer ID certificate, save notary credentials once with `xcrun notarytool store-credentials ogle-notary`, then:
-
-```sh
-SIGN_IDENTITY="Developer ID Application" ./build.sh
+v=0.3.2
+VERSION=$v SIGN_IDENTITY="Developer ID Application" ./build.sh
 scripts/notarize.sh   # notarizes and staples build/Ogle.app, writes build/Ogle.zip
+git tag -a v$v -m "Ogle v$v" && git push origin main v$v
+gh release create v$v build/Ogle.zip --title "Ogle v$v" --generate-notes --verify-tag
 ```
 
 ## Usage

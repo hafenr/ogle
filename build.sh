@@ -27,6 +27,9 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$web/vendor"
 cp "$(swift build -c release --show-bin-path)/Ogle" "$app/Contents/MacOS/"
 cp Resources/Info.plist "$app/Contents/"
+if [[ -n "${VERSION:-}" ]]; then
+  plutil -replace CFBundleShortVersionString -string "$VERSION" "$app/Contents/Info.plist"
+fi
 cp Resources/AppIcon.icns Resources/ogle.lua "$app/Contents/Resources/"
 mkdir -p "$app/Contents/Resources/neovim/share"
 cp -R "$nvim/bin" "$nvim/lib" "$app/Contents/Resources/neovim/"
