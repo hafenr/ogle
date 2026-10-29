@@ -893,9 +893,17 @@ window.mdpeek = (() => {
       }
     }
     for (const element of content.querySelectorAll(".mdpeek-cursor")) {
-      if (element !== block) element.classList.remove("mdpeek-cursor");
+      if (element === block) continue;
+      element.classList.remove("mdpeek-cursor");
+      element.style.removeProperty("--cursor-bar-left");
+      if (!element.getAttribute("style")) element.removeAttribute("style");
     }
-    block?.classList.add("mdpeek-cursor");
+    if (!block) return;
+    // The bar runs in the page's left margin, whatever the block's indentation, so it never
+    // lands on a list's bullets or numbers.
+    const columnLeft = content.getBoundingClientRect().left + parseFloat(getComputedStyle(content).paddingLeft);
+    block.style.setProperty("--cursor-bar-left", `${columnLeft - block.getBoundingClientRect().left - 16}px`);
+    block.classList.add("mdpeek-cursor");
   }
 
   // Scrolls so that Markdown source line `line` is at the top of the window.

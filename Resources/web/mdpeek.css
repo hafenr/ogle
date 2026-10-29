@@ -694,8 +694,8 @@ body.dragging #welcome .drop-zone {
   }
 }
 
-/* The block holding the editor's cursor: a lime bar in the margin to its left (beyond the
-   bullet or number, for a list item). */
+/* The block holding the editor's cursor: a lime bar in the page's left margin, level with the
+   block (mdpeek.js sets where the margin is relative to the block). */
 .markdown-body .mdpeek-cursor {
   position: relative;
 }
@@ -704,14 +704,10 @@ body.dragging #welcome .drop-zone {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -16px;
+  left: var(--cursor-bar-left, -16px);
   width: 4px;
   border-radius: 2px;
   background: var(--lime);
   pointer-events: none;
   content: "";
-}
-
-.markdown-body li.mdpeek-cursor::before {
-  left: calc(-2em - 8px);
 }
