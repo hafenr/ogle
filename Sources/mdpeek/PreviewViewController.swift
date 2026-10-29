@@ -134,8 +134,12 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     func changeZoom(_ step: Zoom.Step) {
         // Actual size also undoes pinch magnification.
         if step == .actualSize { webView.magnification = 1 }
-        webView.pageZoom = step.apply(to: webView.pageZoom)
-        onZoomChange?(webView.pageZoom)
+        setZoom(step.apply(to: webView.pageZoom))
+    }
+
+    func setZoom(_ zoom: CGFloat) {
+        webView.pageZoom = zoom
+        onZoomChange?(zoom)
     }
 
     // MARK: Printing

@@ -195,11 +195,31 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     @objc func toggleLinked(_ sender: Any?) {
         linked.toggle()
-        // Linking again brings the editor to the preview's zoom level.
-        if linked { editor.zoom = preview.zoom }
         updateLinkItem()
+        if linked {
+            syncToFocusedPane()
+        } else {
+            updateSourceLine()
+        }
         updateZoomLabel()
-        updateSourceLine()
+    }
+
+    /// On linking, brings the other pane to the zoom level and scroll position of the one with
+    /// focus, the one the user was working in.
+    private func syncToFocusedPane() {
+        if editorHasFocus {
+            // The editor follows the preview's zoom from here on, so this leaves both at its level.
+            preview.setZoom(editor.zoom)
+            updateSourceLine()
+        } else {
+            editor.zoom = preview.zoom
+            preview.sourceLine = nil
+            guard let url = preview.documentURL else { return }
+            // No line yet: the preview is at the top.
+            let line = previewTopLine ?? 1
+            editorTopLine = (url, line)
+            editor.scroll(url, toLine: line)
+        }
     }
 
     private func updateLinkItem() {
@@ -220,11 +240,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
-    /// Whether zooming applies to the editor alone: while unlinked, with the editor focused.
-    private var zoomsEditor: Bool {
-        guard !linked, !editorItem.isCollapsed, let responder = window?.firstResponder as? NSView else { return false }
+    private var editorHasFocus: Bool {
+        guard !editorItem.isCollapsed, let responder = window?.firstResponder as? NSView else { return false }
         return responder.isDescendant(of: editor.view)
     }
+
+    /// Whether zooming applies to the editor alone: while unlinked, with the editor focused.
+    private var zoomsEditor: Bool { !linked && editorHasFocus }
 
     private func changeZoom(_ step: Zoom.Step) {
         if zoomsEditor {
