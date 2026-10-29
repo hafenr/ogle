@@ -96,10 +96,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             if linked { editor.zoom = zoom }
             updateZoomLabel()
         }
-        editor.onScroll = { [weak self] url, line in
+        editor.onScroll = { [weak self] url, line, requested in
             guard let self else { return }
             editorTopLine = (url, line)
-            if !linked { lastActivePane = .editor }
+            if !linked && !requested { lastActivePane = .editor }
             updateSourceLine()
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }

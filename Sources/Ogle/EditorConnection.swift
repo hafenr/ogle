@@ -5,8 +5,9 @@ import Foundation
 @MainActor
 final class EditorConnection {
     enum Event: Decodable {
-        /// The first line shown in a window on the file at `path`.
-        case scroll(path: String, line: Int)
+        /// The first line shown in a window on the file at `path`, and whether Ogle asked for it
+        /// rather than the user scrolling.
+        case scroll(path: String, line: Int, requested: Bool)
         /// The line of the cursor, in a window on the file at `path`.
         case cursor(path: String, line: Int)
         /// Whether any buffer has unsaved changes.
@@ -15,7 +16,7 @@ final class EditorConnection {
         case background(Int?)
 
         private enum CodingKeys: String, CodingKey {
-            case event, path, line, value, color
+            case event, path, line, requested, value, color
         }
 
         init(from decoder: Decoder) throws {
@@ -24,7 +25,8 @@ final class EditorConnection {
             case "scroll":
                 self = .scroll(
                     path: try container.decode(String.self, forKey: .path),
-                    line: try container.decode(Int.self, forKey: .line))
+                    line: try container.decode(Int.self, forKey: .line),
+                    requested: try container.decode(Bool.self, forKey: .requested))
             case "cursor":
                 self = .cursor(
                     path: try container.decode(String.self, forKey: .path),

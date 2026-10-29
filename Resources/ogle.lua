@@ -25,14 +25,16 @@ end
 local quiet = true
 
 local last_scroll
-local function report_scroll(window, force)
+-- Reports where `window` is if that changed, or in any case if Ogle asked (`requested`). The
+-- report says which, since only the former can be the user scrolling.
+local function report_scroll(window, requested)
   if quiet then
     return
   end
   local scroll = scroll_state(window)
-  if scroll and (force or not vim.deep_equal(scroll, last_scroll)) then
+  if scroll and (requested or not vim.deep_equal(scroll, last_scroll)) then
     last_scroll = scroll
-    send(scroll)
+    send(vim.tbl_extend("force", scroll, { requested = requested or false }))
   end
 end
 
