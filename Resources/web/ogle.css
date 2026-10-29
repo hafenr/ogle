@@ -324,8 +324,8 @@ body {
   }
 }
 
-/* Start page: a card like the app icon (the eye looking down at the drop zone) beside the
-   Open Quickly card, both raised like the icon's slab. */
+/* Start page: the app icon as a card (the eye looking down at the drop zone on the page)
+   beside the Open Quickly card, both raised like the icon's slab, with the title above. */
 :root {
   --paper: #fafaf7;
   --slab: 0 14px 0 #adada4, 0 34px 30px -8px rgb(0 0 0 / 0.28);
@@ -338,10 +338,11 @@ body:has(#welcome:not([hidden])) {
 #welcome {
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 24px 24px 48px;
+  padding: 24px 24px 40px;
   color: var(--ink);
   font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -354,7 +355,7 @@ body:has(#welcome:not([hidden])) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
   align-items: stretch;
-  gap: 40px 48px;
+  gap: 54px 48px;
   width: 100%;
   max-width: 1040px;
 }
@@ -363,8 +364,9 @@ body:has(#welcome:not([hidden])) {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 340px;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: var(--slab);
 }
@@ -373,49 +375,80 @@ body:has(#welcome:not([hidden])) {
 #welcome .start::after {
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.12);
   pointer-events: none;
   content: "";
 }
 
-#welcome .start-header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 24px 18px;
-  color: var(--paper);
-  background: linear-gradient(180deg, #3b4048, #1c1f23);
+#welcome .start-top {
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+  background: linear-gradient(180deg, #3b4048, #24272c);
 }
 
 #welcome .start-eye {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  height: calc(100% - 28px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+}
+
+#welcome .start-paper {
+  position: relative;
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 156px;
+  background: linear-gradient(180deg, #ffffff, #e7e7df);
 }
 
-#welcome h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+/* The icon's "text" lines on either side of the drop zone. */
+#welcome .md-lines {
+  position: absolute;
+  top: 52px;
+  left: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
 }
 
-#welcome .start-header p {
-  margin: 6px 0 0;
-  color: #b9bec7;
-  font-size: 12px;
+#welcome .md-lines-right {
+  right: 40px;
+  left: auto;
+  align-items: flex-end;
 }
 
-#welcome .start-body {
-  flex: 1;
+#welcome .md-lines span {
+  width: 62px;
+  height: 13px;
+  border-radius: 7px;
+  background: rgb(35 38 43 / 0.24);
+}
+
+#welcome .md-lines span + span {
+  width: 44px;
+}
+
+#welcome .welcome-footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 22px 24px 20px;
-  background: linear-gradient(180deg, #ffffff, #ececE4);
+  gap: 10px;
+  margin-top: 78px;
   text-align: center;
+}
+
+#welcome h1 {
+  margin: 0 0 32px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 #welcome .drop-zone {
@@ -424,12 +457,13 @@ body:has(#welcome:not([hidden])) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  width: 100%;
-  height: 150px;
+  gap: 10px;
+  width: 240px;
+  height: 116px;
+  margin-top: 4px;
   border: 1.5px dashed #9aa1ae;
   border-radius: 14px;
-  background: rgb(255 255 255 / 0.6);
+  background: rgb(255 255 255 / 0.55);
   transition: border-color 120ms, background-color 120ms;
 }
 
@@ -449,8 +483,8 @@ body.dragging #welcome .drop-zone {
 }
 
 #welcome button.primary {
-  height: 32px;
-  padding: 0 16px;
+  height: 28px;
+  padding: 0 14px;
   border: 0;
   border-radius: 8px;
   color: #ffffff;
@@ -484,7 +518,7 @@ body.dragging #welcome .drop-zone {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #e2e2dc;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: var(--slab);
 }
@@ -631,8 +665,12 @@ body.dragging #welcome .drop-zone {
     background: #0d1117;
   }
 
-  #welcome .start-body {
+  #welcome .start-paper {
     background: linear-gradient(180deg, #1c2128, #161b22);
+  }
+
+  #welcome .md-lines span {
+    background: rgb(230 237 243 / 0.16);
   }
 
   #welcome kbd,
