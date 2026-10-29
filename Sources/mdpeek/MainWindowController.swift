@@ -3,16 +3,13 @@ import UniformTypeIdentifiers
 
 private extension NSToolbarItem.Identifier {
     static let find = Self("find")
-    static let zoom = Self("zoom")
     static let editor = Self("editor")
-    static let link = Self("link")
-    static let openInEditor = Self("openInEditor")
-    static let share = Self("share")
+    static let more = Self("more")
 }
 
 @MainActor
 final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate, NSMenuItemValidation,
-    NSSharingServicePickerToolbarItemDelegate
+    NSMenuDelegate
 {
     private let recents = RecentFiles()
     private let sidebar: SidebarViewController
@@ -30,7 +27,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// The source line at the top of the preview, once scrolled away from the top.
     private var previewTopLine: Int?
     private var findItem: NSSearchToolbarItem?
-    private var linkItem: NSToolbarItem?
+    private var editorButton: NSButton?
+    /// The picker behind the More menu's Share item.
+    private var sharePicker: NSSharingServicePicker?
     private let zoomControl = NSSegmentedControl(
         labels: ["−", "100%", "+"], trackingMode: .momentary, target: nil, action: nil)
 
@@ -119,6 +118,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         window?.representedURL = url
         sidebar.select(url)
         previewTopLine = nil
+        updateEditorButton()
         if !editorItem.isCollapsed {
             editor.open(url, atLine: nil)
         }
@@ -144,7 +144,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             editorWidth = editor.view.frame.width
             editorItem.isCollapsed = true
         }
-        linkItem?.isHidden = !visible
+        updateEditorButton()
         window?.makeFirstResponder(visible ? editor.focusView : preview.focusView)
         updateSourceLine()
     }
@@ -195,7 +195,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     @objc func toggleLinked(_ sender: Any?) {
         linked.toggle()
-        updateLinkItem()
         if linked {
             syncToFocusedPane()
         } else {
@@ -227,10 +226,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
-    private func updateLinkItem() {
-        let title = linked ? "Scroll and Zoom the Editor and Preview Separately" : "Scroll and Zoom the Editor and Preview Together"
-        linkItem?.image = NSImage(systemSymbolName: linked ? "lock" : "lock.open", accessibilityDescription: title)
-        linkItem?.toolTip = title
+    /// Shows the editor button pressed while the editor is shown.
+    private func updateEditorButton() {
+        guard let editorButton else { return }
+        let shown = !editorItem.isCollapsed
+        editorButton.state = shown ? .on : .off
+        editorButton.toolTip = shown ? "Hide Editor" : "Show Editor"
+        editorButton.setAccessibilityLabel(editorButton.toolTip)
+        editorButton.isEnabled = shown || preview.documentURL != nil
     }
 
     @objc func zoomIn(_ sender: Any?) { changeZoom(.larger) }
@@ -335,16 +338,23 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
-    // MARK: NSSharingServicePickerToolbarItemDelegate
+    // MARK: NSMenuDelegate
 
-    func items(for pickerToolbarItem: NSSharingServicePickerToolbarItem) -> [Any] {
-        preview.documentURL.map { [$0] } ?? []
+    /// Fills the toolbar's More menu, whose Share item offers the services for the current file.
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        menu.addItem(withTitle: "Open in Editor", action: #selector(openInEditor(_:)), keyEquivalent: "").target = self
+        sharePicker = preview.documentURL.map { NSSharingServicePicker(items: [$0]) }
+        menu.addItem(sharePicker?.standardShareMenuItem ?? NSMenuItem(title: "Share", action: nil, keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Export as PDF…", action: #selector(exportPDF(_:)), keyEquivalent: "").target = self
+        menu.addItem(withTitle: "Print…", action: #selector(printDocument(_:)), keyEquivalent: "").target = self
     }
 
     // MARK: NSToolbarDelegate
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .zoom, .link, .editor, .openInEditor, .share]
+        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .editor, .more]
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
@@ -366,43 +376,27 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             item.searchField.action = #selector(findFieldChanged(_:))
             findItem = item
             return item
-        case .zoom:
-            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Zoom"
-            item.view = zoomControl
-            return item
         case .editor:
+            let button = NSButton(
+                image: NSImage(systemSymbolName: "rectangle.split.2x1", accessibilityDescription: nil)!,
+                target: self, action: #selector(toggleEditor(_:)))
+            button.bezelStyle = .toolbar
+            button.setButtonType(.pushOnPushOff)
+            editorButton = button
+            updateEditorButton()
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
             item.label = "Editor"
-            item.toolTip = "Toggle Editor"
-            item.image = NSImage(systemSymbolName: "rectangle.split.2x1", accessibilityDescription: "Toggle Editor")
-            item.isBordered = true
-            item.target = self
-            item.action = #selector(toggleEditor(_:))
+            item.view = button
             return item
-        case .link:
-            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Link Editor"
-            item.isBordered = true
-            item.isHidden = editorItem.isCollapsed
-            item.target = self
-            item.action = #selector(toggleLinked(_:))
-            linkItem = item
-            updateLinkItem()
-            return item
-        case .openInEditor:
-            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Open in Editor"
-            item.toolTip = "Open in Editor"
-            item.image = NSImage(systemSymbolName: "square.and.pencil", accessibilityDescription: "Open in Editor")
-            item.isBordered = true
-            item.target = self
-            item.action = #selector(openInEditor(_:))
-            return item
-        case .share:
-            let item = NSSharingServicePickerToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Share"
-            item.delegate = self
+        case .more:
+            let item = NSMenuToolbarItem(itemIdentifier: itemIdentifier)
+            item.label = "More"
+            item.toolTip = "More"
+            item.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: "More")
+            item.showsIndicator = false
+            let menu = NSMenu()
+            menu.delegate = self
+            item.menu = menu
             return item
         default:
             return NSToolbarItem(itemIdentifier: itemIdentifier)
