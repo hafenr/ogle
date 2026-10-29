@@ -66,14 +66,11 @@ defaults delete dev.ogle    # recent files and window layout
 
 ### Releasing
 
-Releases are built, signed and notarized on a Mac with the Developer ID certificate, then published with the [GitHub CLI](https://cli.github.com). Save notary credentials once with `xcrun notarytool store-credentials ogle-notary`. Then, on a clean `main`:
+Releases are built, signed and notarized on a Mac with the Developer ID certificate, and published with the [GitHub CLI](https://cli.github.com). Once, save notary credentials with `xcrun notarytool store-credentials ogle-notary` and log in with `gh auth login`. Then, on an up-to-date `main` with everything committed:
 
 ```sh
-v=0.3.2
-VERSION=$v SIGN_IDENTITY="Developer ID Application" ./build.sh
-scripts/notarize.sh   # notarizes and staples build/Ogle.app, writes build/Ogle.zip
-git tag -a v$v -m "Ogle v$v" && git push origin main v$v
-gh release create v$v build/Ogle.zip --title "Ogle v$v" --generate-notes --verify-tag
+scripts/sign-and-release.sh          # shows the latest release and the next version
+scripts/sign-and-release.sh 0.3.3    # builds, signs, notarizes, then asks before tagging and publishing
 ```
 
 ## Usage
