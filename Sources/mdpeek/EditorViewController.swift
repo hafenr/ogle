@@ -14,6 +14,11 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
     var onQuit: (() -> Void)?
 
     var focusView: NSView? { session?.terminal }
+    /// The text size relative to the default, which follows the preview's zoom.
+    var zoom: CGFloat = 1 {
+        didSet { session?.terminal.font = font }
+    }
+    private var font: NSFont { .monospacedSystemFont(ofSize: 13 * zoom, weight: .regular) }
 
     override func loadView() {
         view = NSView()
@@ -54,7 +59,7 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
         view.subviews.forEach { $0.removeFromSuperview() }
         let terminal = EditorTerminalView(frame: view.bounds)
         terminal.processDelegate = self
-        terminal.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        terminal.font = font
         terminal.configureNativeColors()
         terminal.syncColorScheme()
         // Option types the characters of the keyboard layout, and acts as Meta only on keys

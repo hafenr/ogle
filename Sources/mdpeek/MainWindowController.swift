@@ -79,7 +79,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         preview.onOpenMarkdown = { [weak self] url in self?.open(url) }
         preview.onOutlineChange = { [weak self] headings in self?.sidebar.setHeadings(headings) }
         preview.onSectionChange = { [weak self] id in self?.sidebar.setCurrentHeading(id) }
-        preview.onZoomChange = { [weak self] zoom in self?.updateZoomLabel(zoom) }
+        preview.onZoomChange = { [weak self] zoom in
+            self?.updateZoomLabel(zoom)
+            self?.editor.zoom = zoom
+        }
         editor.onScroll = { [weak self] url, line in
             self?.editorTopLine = (url, line)
             self?.updateSourceLine()
