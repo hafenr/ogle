@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mdpeek proposed — writing with Neovim</title>
+<title>Ogle proposed — writing with Neovim</title>
 <style>
 body{margin:0}
 a{color:#0969da}a:hover{color:#0550ae}
@@ -32,7 +32,7 @@ a{color:#0969da}a:hover{color:#0550ae}
 <button class="tb" type="button" aria-label="Show Sidebar"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M6 2.5v11"></path></svg></button>
 <div style="display: flex; flex-direction: column; margin: 0 auto 0 8px">
 <span style="font-weight: 600; font-size: 13px">README.md</span>
-<span style="font-size: 11px; color: #5c5c63">~/src/mdpeek — Edited</span>
+<span style="font-size: 11px; color: #5c5c63">~/src/ogle — Edited</span>
 </div>
 <button class="tb" type="button" aria-label="Find"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg></button>
 <button class="tb" type="button" aria-label="Hide Editor" aria-pressed="true" style="background: #e4e4e8"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M8 2.5v11"></path></svg></button>
@@ -46,7 +46,7 @@ a{color:#0969da}a:hover{color:#0550ae}
 <div class="nv"><b>86</b><span style="font-weight: 700">## Usage</span></div>
 <div class="nv"><b>87</b></div>
 <div class="nv"><b>88</b><span style="color: #5f6269">```sh</span></div>
-<div class="nv"><b>89</b>mdpeek README.md</div>
+<div class="nv"><b>89</b>ogle README.md</div>
 <div class="nv"><b>90</b><span style="color: #5f6269">```</span></div>
 <div class="nv"><b>91</b></div>
 <div class="nv"><b>92</b>Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpe</div>
@@ -55,13 +55,13 @@ a{color:#0969da}a:hover{color:#0550ae}
 <div class="nv"><b>95</b></div>
 <div class="nv"><b>96</b><span style="color: #5f6269">```mermaid</span></div>
 <div class="nv"><b>97</b>flowchart LR</div>
-<div class="nv" style="background: #cfd2db"><b style="color: #14161b; font-weight: 700">98</b>  nvim[<span style="color: #005c52">"Neovim + mdpeek.lua"</span><span style="background: #14161b; color: #e0e2ea">]</span> -->|<span style="color: #005c52">JSON over socket</span>| app[<span style="color: #005c52">"mdpeek.app"</span>]</div>
+<div class="nv" style="background: #cfd2db"><b style="color: #14161b; font-weight: 700">98</b>  nvim[<span style="color: #005c52">"Neovim + ogle.lua"</span><span style="background: #14161b; color: #e0e2ea">]</span> -->|<span style="color: #005c52">JSON over socket</span>| app[<span style="color: #005c52">"Ogle.app"</span>]</div>
 <div class="nv"><b>99</b>  app -->|<span style="color: #005c52">cmark-gfm HTML</span>| web[<span style="color: #005c52">"WKWebView"</span>]</div>
 <div class="nv"><b>100</b>  web -->|<span style="color: #005c52">scroll, outline</span>| app</div>
 <div class="nv"><b>101</b><span style="color: #5f6269">```</span></div>
 <div class="nv"><b>102</b></div>
-<div class="nv"><b>103</b>- `Sources/mdpeek` – the AppKit app: window with sidebar, `WKWebV</div>
-<div class="nv"><b>104</b>- `Resources/mdpeek.lua` – loaded into the editor’s Neovim; report</div>
+<div class="nv"><b>103</b>- `Sources/Ogle` – the AppKit app: window with sidebar, `WKWebV</div>
+<div class="nv"><b>104</b>- `Resources/ogle.lua` – loaded into the editor’s Neovim; report</div>
 <div class="nv"><b>105</b>- `Resources/AppIcon.icns`, `Resources/icon/` – the app icon and</div>
 <div class="nv"><b>106</b>- `Resources/web` – the page that displays the rendered HTML (`mdp</div>
 <div class="nv"><b style="color: #5f6269">~</b></div>
@@ -84,23 +84,23 @@ Showing last save · <kbd style="font: 11px ui-monospace, Menlo, monospace">:w</
 <h2>Usage</h2>
 <div style="margin-bottom: 16px; border: 1px solid #d1d9e0b3; border-radius: 6px; overflow: hidden; background: #f6f8fa">
 <div style="display: flex; align-items: center; min-height: 32px; padding: 2px 12px; border-bottom: 1px solid #d1d9e0b3; color: #59636e; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace">sh</div>
-<pre>mdpeek README.md</pre>
+<pre>ogle README.md</pre>
 </div>
-<p>Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek from Finder’s “Open With”.</p>
+<p>Or use File › Open… (⌘O), drop a file on the Dock icon, or pick Ogle from Finder’s “Open With”.</p>
 <h2>Layout</h2>
-<figure aria-label="Diagram: Neovim, mdpeek.app and WKWebView" style="position: relative; margin: 0 0 16px; padding: 40px 16px 28px; border: 1px solid #d1d9e0b3; border-radius: 8px; box-shadow: 0 0 0 3px #c6f05a">
+<figure aria-label="Diagram: Neovim, Ogle.app and WKWebView" style="position: relative; margin: 0 0 16px; padding: 40px 16px 28px; border: 1px solid #d1d9e0b3; border-radius: 8px; box-shadow: 0 0 0 3px #c6f05a">
 <span style="position: absolute; top: 8px; left: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #4a4a50"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #23262b"></span>Cursor here</span>
 <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap">
-<div class="node">Neovim + mdpeek.lua</div>
+<div class="node">Neovim + ogle.lua</div>
 <div class="edge"><span>JSON over socket</span><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M0 5h68M64 1.5 68 5l-4 3.5"></path></svg></div>
-<div class="node">mdpeek.app</div>
+<div class="node">Ogle.app</div>
 <div class="edge"><span>cmark-gfm HTML</span><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M0 5h68M64 1.5 68 5l-4 3.5"></path></svg><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M72 5H4M8 1.5 4 5l4 3.5"></path></svg><span>scroll, outline</span></div>
 <div class="node">WKWebView</div>
 </div>
 </figure>
 <ul style="padding-left: 2em">
-<li><code>Sources/mdpeek</code> – the AppKit app: window with sidebar, <code>WKWebView</code> preview, FSEvents file watcher, cmark-gfm rendering, and the editor pane.</li>
-<li><code>Resources/mdpeek.lua</code> – loaded into the editor’s Neovim; reports its scroll position, unsaved changes and background color to mdpeek over a Unix socket.</li>
+<li><code>Sources/Ogle</code> – the AppKit app: window with sidebar, <code>WKWebView</code> preview, FSEvents file watcher, cmark-gfm rendering, and the editor pane.</li>
+<li><code>Resources/ogle.lua</code> – loaded into the editor’s Neovim; reports its scroll position, unsaved changes and background color to Ogle over a Unix socket.</li>
 </ul>
 </article>
 </section>

@@ -1,6 +1,6 @@
-# mdpeek redesign mockups
+# Ogle redesign mockups
 
-Static HTML mockups of the mdpeek window, light mode only, drawn at 1280×800. Open them in a
+Static HTML mockups of the Ogle window, light mode only, drawn at 1280×800. Open them in a
 browser. The values in them (colors, sizes, spacing) are the intended ones; the window chrome
 (traffic lights, toolbar background) only stands in for AppKit and is not to be rebuilt in HTML.
 

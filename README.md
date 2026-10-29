@@ -98,15 +98,6 @@ Quit Ogle, then rebuild and replace the installed app:
 ./build.sh && rm -rf ~/Applications/Ogle.app && cp -R build/Ogle.app ~/Applications/
 ```
 
-### Upgrading from mdpeek
-
-Ogle was called mdpeek up to v0.2.3. It brings over mdpeek's recent files, window layout and settings the first time it starts. Remove the old app and command:
-
-```sh
-rm -rf ~/Applications/mdpeek.app ~/.local/bin/mdpeek
-defaults delete dev.mdpeek
-```
-
 ### Uninstalling
 
 ```sh

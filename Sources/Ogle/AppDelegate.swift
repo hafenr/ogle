@@ -6,20 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var windowController = MainWindowController()
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        migrateSettingsFromMdpeek()
         NSApp.mainMenu = makeMainMenu()
-    }
-
-    /// Brings over the recent files, window layout and settings of mdpeek, as Ogle was called
-    /// before, the first time Ogle runs.
-    private func migrateSettingsFromMdpeek() {
-        let defaults = UserDefaults.standard
-        guard !defaults.bool(forKey: "migratedFromMdpeek") else { return }
-        defaults.set(true, forKey: "migratedFromMdpeek")
-        guard let old = defaults.persistentDomain(forName: "dev.mdpeek") else { return }
-        for (key, value) in old where defaults.object(forKey: key) == nil {
-            defaults.set(value, forKey: key)
-        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
