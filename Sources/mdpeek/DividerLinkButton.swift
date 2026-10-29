@@ -44,13 +44,15 @@ final class DividerLinkButton: NSButton {
 
     private func updateColors() {
         if isLinked {
-            // Ink with a paper chain; lime with an ink chain in dark mode, where ink would vanish.
-            let isDark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-            layer?.backgroundColor = resolvedCGColor(isDark ? Palette.lime : Palette.ink)
-            layer?.borderColor = resolvedCGColor(isDark ? Palette.lime : Palette.ink)
-            contentTintColor = isDark ? Palette.ink : Palette.paper
+            // Ink with a paper chain, outlined in gray so it shows against dark editor themes
+            // and dark mode too.
+            layer?.backgroundColor = resolvedCGColor(Palette.ink)
+            layer?.borderColor = resolvedCGColor(NSColor(srgbHex: 0x8B9099))
+            layer?.borderWidth = 1.5
+            contentTintColor = Palette.paper
             layer?.shadowOpacity = 0.18
         } else {
+            layer?.borderWidth = 1
             layer?.backgroundColor = resolvedCGColor(Palette.dynamic(light: .white, dark: NSColor(srgbHex: 0x161B22)))
             layer?.borderColor = resolvedCGColor(Palette.dynamic(light: NSColor(srgbHex: 0xC9CBD1), dark: NSColor(white: 1, alpha: 0.22)))
             contentTintColor = .secondaryLabelColor
