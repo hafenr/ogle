@@ -5,7 +5,7 @@ import AppKit
 /// they do not.
 @MainActor
 final class DividerLinkButton: NSButton {
-    static let diameter: CGFloat = 24
+    static let diameter: CGFloat = 26
 
     var isLinked = true {
         didSet { update() }
@@ -58,12 +58,12 @@ final class DividerLinkButton: NSButton {
         }
     }
 
-    /// The chain link of the design, drawn at 13 pt from its 16-unit outline; broken, its two
+    /// The chain link of the design, drawn at 14 pt from its 16-unit outline; broken, its two
     /// halves are pulled apart with break marks between them.
     nonisolated static func chainImage(broken: Bool) -> NSImage {
-        let image = NSImage(size: NSSize(width: 13, height: 13), flipped: true) { _ in
+        let image = NSImage(size: NSSize(width: 14, height: 14), flipped: true) { _ in
             let transform = NSAffineTransform()
-            transform.scale(by: 13.0 / 16)
+            transform.scale(by: 14.0 / 16)
             transform.concat()
             let path = NSBezierPath()
             let shift: CGFloat = broken ? 0.8 : 0
