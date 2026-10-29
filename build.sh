@@ -40,5 +40,19 @@ cp node_modules/mermaid/dist/mermaid.min.js \
    "$web/vendor/"
 cp node_modules/@highlightjs/cdn-assets/styles/github.min.css "$web/vendor/highlight-github.css"
 cp node_modules/@highlightjs/cdn-assets/styles/github-dark.min.css "$web/vendor/highlight-github-dark.css"
-codesign --force --sign - "$app"
+
+# Signed ad hoc by default. With SIGN_IDENTITY set (for example "Developer ID Application"),
+# signed for distribution: Neovim's parsers and binary first, then the app, all with the
+# hardened runtime and a secure timestamp. scripts/notarize.sh then notarizes the result.
+if [[ -n "${SIGN_IDENTITY:-}" ]]; then
+  sign=(codesign --force --timestamp --options runtime --sign "$SIGN_IDENTITY")
+  find "$app/Contents/Resources/neovim/lib" -name '*.so' -exec "${sign[@]}" {} +
+  # LuaJIT compiles Lua to machine code at run time in memory it makes executable with
+  # mprotect, not MAP_JIT, which the hardened runtime kills nvim for without this entitlement.
+  "${sign[@]}" --entitlements Resources/nvim.entitlements "$app/Contents/Resources/neovim/bin/nvim"
+  "${sign[@]}" "$app"
+  codesign --verify --strict --deep "$app"
+else
+  codesign --force --sign - "$app"
+fi
 echo "Built $app"

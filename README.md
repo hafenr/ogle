@@ -76,6 +76,13 @@ Push a version tag. The Package workflow builds the app with that version and pu
 git tag -a v0.3.0 -m "Ogle v0.3.0" && git push origin v0.3.0
 ```
 
+To sign and notarize a build yourself with a Developer ID certificate, save notary credentials once with `xcrun notarytool store-credentials ogle-notary`, then:
+
+```sh
+SIGN_IDENTITY="Developer ID Application" ./build.sh
+scripts/notarize.sh   # notarizes and staples build/Ogle.app, writes build/Ogle.zip
+```
+
 ## Usage
 
 ```sh
