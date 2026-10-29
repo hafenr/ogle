@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mdpeek today — reading view</title>
+<style>
+body{margin:0}
+a{color:#0969da}a:hover{color:#0550ae}
+.md h2{margin:24px 0 16px;padding-bottom:.3em;font-size:24px;font-weight:600;line-height:1.25;border-bottom:1px solid #d1d9e0b3}
+.md h3{margin:24px 0 16px;font-size:20px;font-weight:600;line-height:1.25}
+.md p,.md ol{margin:0 0 16px}
+.md code{padding:.2em .4em;border-radius:6px;background:#818b981f;font:85% ui-monospace,SFMono-Regular,Menlo,monospace}
+.md pre{margin:0;padding:16px;background:#f6f8fa;font:13.6px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden}
+.tb{display:flex;align-items:center;justify-content:center;width:32px;height:28px;border:0;border-radius:6px;background:transparent;color:#3c3c43}
+.tb svg,.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div style="width: 100%; min-height: 800px; display: flex; flex-wrap: wrap; overflow: hidden; background: #ffffff; color: #1f2328; font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif">
+
+<aside aria-label="Sidebar" style="flex: 1 1 240px; display: flex; flex-direction: column; background: #f0f0f2; border-right: 1px solid #dcdcdf">
+<div style="height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 20px">
+<div aria-hidden="true" style="display: flex; gap: 8px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button class="tb" type="button" aria-label="Toggle Sidebar"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M6 2.5v11"></path></svg></button>
+</div>
+<div style="padding: 0 10px 6px">
+<label for="filter-today" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter</label>
+<input id="filter-today" type="search" placeholder="Filter" style="box-sizing: border-box; width: 100%; height: 28px; padding: 0 10px; border: 1px solid #d6d6da; border-radius: 7px; background: #ffffff; font: inherit">
+</div>
+<div style="display: flex; flex-direction: column; padding: 4px 10px; gap: 0">
+<div style="height: 26px; display: flex; align-items: center; padding-left: 4px; font-size: 11px; font-weight: 600; color: #5c5c63">Recent</div>
+<div style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 2px; border-radius: 6px; background: #d4d4d8">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 18px; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span>README.md</span><span style="font-size: 11px; color: #5c5c63">~/src/mdpeek</span></div>
+<span style="align-self: flex-start; margin-top: 4px; font-size: 11px; color: #5c5c63">now</span>
+</div>
+<div style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 2px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 18px; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span>SESSION.md</span><span style="font-size: 11px; color: #5c5c63">~/src/mdpeek</span></div>
+<span style="align-self: flex-start; margin-top: 4px; font-size: 11px; color: #5c5c63">2h</span>
+</div>
+<div style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 2px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 18px; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span>runbook.md</span><span style="font-size: 11px; color: #5c5c63">~/Notes</span></div>
+<span style="align-self: flex-start; margin-top: 4px; font-size: 11px; color: #5c5c63">Yesterday</span>
+</div>
+<div style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 2px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 18px; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span>meeting-notes.md</span><span style="font-size: 11px; color: #5c5c63">~/Documents</span></div>
+<span style="align-self: flex-start; margin-top: 4px; font-size: 11px; color: #5c5c63">Mon</span>
+</div>
+<div style="height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 4px 0 2px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 18px; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span>CONTRIBUTING.md</span><span style="font-size: 11px; color: #5c5c63">~/src/swift-cmark</span></div>
+<span style="align-self: flex-start; margin-top: 4px; font-size: 11px; color: #5c5c63">Oct 14</span>
+</div>
+<div style="height: 26px; display: flex; align-items: center; padding-left: 4px; margin-top: 4px; font-size: 11px; font-weight: 600; color: #5c5c63">On This Page</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 4px">mdpeek</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 16px">Installation</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 28px; font-weight: 600; color: #0064e1">Download</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 28px">Build from source</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 28px">Updating</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 28px">Uninstalling</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 28px">Releasing</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 16px">Usage</div>
+<div style="height: 24px; display: flex; align-items: center; padding-left: 16px">Layout</div>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="min-height: 52px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 0 12px 0 16px; border-bottom: 1px solid #e3e3e6">
+<div style="display: flex; flex-direction: column; margin-right: auto">
+<span style="font-weight: 600; font-size: 13px">README.md</span>
+<span style="font-size: 11px; color: #5c5c63">~/src/mdpeek</span>
+</div>
+<label for="find-today" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Find</label>
+<input id="find-today" type="search" placeholder="Find" style="box-sizing: border-box; width: 200px; height: 28px; padding: 0 10px; border: 1px solid #d6d6da; border-radius: 7px; font: inherit">
+<div role="group" aria-label="Zoom" style="display: flex; height: 26px; border: 1px solid #d6d6da; border-radius: 6px; overflow: hidden">
+<button type="button" aria-label="Zoom Out" style="width: 28px; border: 0; background: #ffffff; font: inherit">−</button>
+<button type="button" aria-label="Actual Size" style="width: 52px; border: 0; border-left: 1px solid #d6d6da; border-right: 1px solid #d6d6da; background: #ffffff; font: inherit">100%</button>
+<button type="button" aria-label="Zoom In" style="width: 28px; border: 0; background: #ffffff; font: inherit">+</button>
+</div>
+<button class="tb" type="button" aria-label="Toggle Editor"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M8 2.5v11"></path></svg></button>
+<button class="tb" type="button" aria-label="Open in Editor"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"></path><path d="M12 1.8 14.2 4 8.5 9.7 6 10.2l.5-2.5z"></path></svg></button>
+<button class="tb" type="button" aria-label="Share"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v9M5 4.5 8 1.5l3 3"></path><path d="M5.5 6.5h-2v8h9v-8h-2"></path></svg></button>
+</header>
+
+<div style="position: relative; flex: 1; height: 700px; overflow: hidden">
+<div style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 12px; border-radius: 999px; background: #23262b; color: #ffffff; font-size: 12px; box-shadow: 0 4px 14px rgb(0 0 0 / 0.18); z-index: 1">
+<span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #c6f05a"></span>Reloaded — file changed on disk
+</div>
+<article class="md" style="box-sizing: border-box; max-width: 860px; margin: 0 auto; padding: 8px 48px 64px; font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif">
+<h2>Installation</h2>
+<h3>Download</h3>
+<p>Download <code>mdpeek.zip</code> from the <a href="#">latest release</a> (Apple Silicon, macOS 15 or later), unzip it, and move <code>mdpeek.app</code> to <code>~/Applications</code>. The app is not notarized by Apple, so macOS refuses to open the downloaded copy until you remove the quarantine flag:</p>
+<div style="margin-bottom: 16px; border: 1px solid #d1d9e0b3; border-radius: 6px; overflow: hidden; background: #f6f8fa">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 2px 4px 2px 12px; border-bottom: 1px solid #d1d9e0b3; color: #59636e; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace">
+<span>sh</span>
+<button type="button" style="display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: #59636e; font: 12px -apple-system, sans-serif"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="9.5" height="9.5" rx="1.5"></rect><path d="M11 5V3a1.5 1.5 0 0 0-1.5-1.5h-6A1.5 1.5 0 0 0 2 3v6a1.5 1.5 0 0 0 1.5 1.5H5"></path></svg>Copy</button>
+</div>
+<pre>xattr -dr com.apple.quarantine ~/Applications/mdpeek.app</pre>
+</div>
+<h3>Build from source</h3>
+<p>Requirements: macOS 15 or later, the Swift toolchain (Xcode, or the Command Line Tools via <code>xcode-select --install</code>), Node.js with npm, and curl (<code>build.sh</code> downloads the Neovim release it bundles).</p>
+<ol style="padding-left: 2em">
+<li>Build the app from the project directory:</li>
+</ol>
+<div style="margin: 0 0 16px 2em; border: 1px solid #d1d9e0b3; border-radius: 6px; overflow: hidden; background: #f6f8fa">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 2px 4px 2px 12px; border-bottom: 1px solid #d1d9e0b3; color: #59636e; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace">
+<span>sh</span>
+<button type="button" style="display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: #59636e; font: 12px -apple-system, sans-serif"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="9.5" height="9.5" rx="1.5"></rect><path d="M11 5V3a1.5 1.5 0 0 0-1.5-1.5h-6A1.5 1.5 0 0 0 2 3v6a1.5 1.5 0 0 0 1.5 1.5H5"></path></svg>Copy</button>
+</div>
+<pre>./build.sh          # produces build/mdpeek.app</pre>
+</div>
+</article>
+</div>
+
+<footer style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-top: 1px solid #e3e3e6; font-size: 11px; color: #5c5c63">
+<span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #28a745"></span>
+<span style="margin-right: 10px">Watching for changes</span>
+<span>851 words · 4 min read</span>
+<span style="margin-left: auto">Download · 3 of 9</span>
+</footer>
+</main>
+</div>
+</body>
+</html>

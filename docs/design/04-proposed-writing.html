@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mdpeek proposed — writing with Neovim</title>
+<style>
+body{margin:0}
+a{color:#0969da}a:hover{color:#0550ae}
+.md h2{margin:24px 0 16px;padding-bottom:.3em;font-size:24px;font-weight:600;line-height:1.25;border-bottom:1px solid #d1d9e0b3}
+.md p,.md ul{margin:0 0 16px}
+.md code{padding:.2em .4em;border-radius:6px;background:#818b981f;font:85% ui-monospace,SFMono-Regular,Menlo,monospace}
+.md pre{margin:0;padding:16px;background:#f6f8fa;font:13.6px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden}
+.tb{display:flex;align-items:center;justify-content:center;width:32px;height:28px;border:0;border-radius:6px;background:transparent;color:#3c3c43}
+.tb svg,.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.nv{display:flex;white-space:pre;height:19px;overflow:hidden}
+.nv b{display:inline-block;width:40px;padding-right:10px;text-align:right;font-weight:400;color:#5f6269;flex:none}
+.node{padding:8px 12px;border:1.5px solid #23262b;border-radius:4px;background:#ffffff;font-size:13px;white-space:nowrap}
+.edge{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:#59636e}
+.edge svg{width:72px;height:10px;fill:none;stroke:#59636e;stroke-width:1.3}
+</style>
+</head>
+<body>
+<div style="width: 100%; min-height: 800px; display: flex; flex-direction: column; overflow: hidden; background: #ffffff; color: #1f2328; font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif">
+
+<header style="min-height: 52px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 0 12px 0 20px; border-bottom: 1px solid #e3e3e6; background: #f6f6f7">
+<div aria-hidden="true" style="display: flex; gap: 8px; margin-right: 12px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<button class="tb" type="button" aria-label="Show Sidebar"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M6 2.5v11"></path></svg></button>
+<div style="display: flex; flex-direction: column; margin: 0 auto 0 8px">
+<span style="font-weight: 600; font-size: 13px">README.md</span>
+<span style="font-size: 11px; color: #5c5c63">~/src/mdpeek — Edited</span>
+</div>
+<button class="tb" type="button" aria-label="Find"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg></button>
+<button class="tb" type="button" aria-label="Hide Editor" aria-pressed="true" style="background: #e4e4e8"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M8 2.5v11"></path></svg></button>
+<button class="tb" type="button" aria-label="More: Open in Editor, Share, Export as PDF, Print" aria-haspopup="menu"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.5" cy="8" r=".6"></circle><circle cx="8" cy="8" r=".6"></circle><circle cx="12.5" cy="8" r=".6"></circle></svg></button>
+</header>
+
+<div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+
+<section aria-label="Editor (Neovim)" style="position: relative; flex: 1 1 480px; min-width: 0; height: 720px; display: flex; flex-direction: column; background: #e0e2ea; color: #14161b; font: 12.5px/19px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace">
+<div style="flex: 1; overflow: hidden; padding-top: 10px">
+<div class="nv"><b>86</b><span style="font-weight: 700">## Usage</span></div>
+<div class="nv"><b>87</b></div>
+<div class="nv"><b>88</b><span style="color: #5f6269">```sh</span></div>
+<div class="nv"><b>89</b>mdpeek README.md</div>
+<div class="nv"><b>90</b><span style="color: #5f6269">```</span></div>
+<div class="nv"><b>91</b></div>
+<div class="nv"><b>92</b>Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpe</div>
+<div class="nv"><b>93</b></div>
+<div class="nv"><b>94</b><span style="font-weight: 700">## Layout</span></div>
+<div class="nv"><b>95</b></div>
+<div class="nv"><b>96</b><span style="color: #5f6269">```mermaid</span></div>
+<div class="nv"><b>97</b>flowchart LR</div>
+<div class="nv" style="background: #cfd2db"><b style="color: #14161b; font-weight: 700">98</b>  nvim[<span style="color: #005c52">"Neovim + mdpeek.lua"</span><span style="background: #14161b; color: #e0e2ea">]</span> -->|<span style="color: #005c52">JSON over socket</span>| app[<span style="color: #005c52">"mdpeek.app"</span>]</div>
+<div class="nv"><b>99</b>  app -->|<span style="color: #005c52">cmark-gfm HTML</span>| web[<span style="color: #005c52">"WKWebView"</span>]</div>
+<div class="nv"><b>100</b>  web -->|<span style="color: #005c52">scroll, outline</span>| app</div>
+<div class="nv"><b>101</b><span style="color: #5f6269">```</span></div>
+<div class="nv"><b>102</b></div>
+<div class="nv"><b>103</b>- `Sources/mdpeek` – the AppKit app: window with sidebar, `WKWebV</div>
+<div class="nv"><b>104</b>- `Resources/mdpeek.lua` – loaded into the editor’s Neovim; report</div>
+<div class="nv"><b>105</b>- `Resources/AppIcon.icns`, `Resources/icon/` – the app icon and</div>
+<div class="nv"><b>106</b>- `Resources/web` – the page that displays the rendered HTML (`mdp</div>
+<div class="nv"><b style="color: #5f6269">~</b></div>
+</div>
+<div style="display: flex; justify-content: space-between; padding: 0 10px; background: #c4c6cd; height: 19px; white-space: pre">
+<span><span style="padding: 0 6px; background: #14161b; color: #e0e2ea; font-weight: 700"> NORMAL </span> README.md [+]</span>
+<span>markdown   98,22   86%</span>
+</div>
+<div style="height: 19px; padding: 0 10px"></div>
+</section>
+
+<div aria-hidden="true" style="flex: 0 0 1px; background: #c9cbd1"></div>
+
+<section aria-label="Preview" style="position: relative; flex: 1 1 480px; min-width: 0; height: 720px; overflow: hidden">
+<div role="status" style="position: absolute; top: 12px; right: 16px; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid #e0e0e4; border-radius: 999px; background: #ffffff; font-size: 11px; color: #4a4a50; z-index: 1">
+<span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #c26a00"></span>
+Showing last save · <kbd style="font: 11px ui-monospace, Menlo, monospace">:w</kbd> to update
+</div>
+<article class="md" style="box-sizing: border-box; max-width: 860px; margin: 0 auto; padding: 4px 40px 64px; font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif">
+<h2>Usage</h2>
+<div style="margin-bottom: 16px; border: 1px solid #d1d9e0b3; border-radius: 6px; overflow: hidden; background: #f6f8fa">
+<div style="display: flex; align-items: center; min-height: 32px; padding: 2px 12px; border-bottom: 1px solid #d1d9e0b3; color: #59636e; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace">sh</div>
+<pre>mdpeek README.md</pre>
+</div>
+<p>Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek from Finder’s “Open With”.</p>
+<h2>Layout</h2>
+<figure aria-label="Diagram: Neovim, mdpeek.app and WKWebView" style="position: relative; margin: 0 0 16px; padding: 40px 16px 28px; border: 1px solid #d1d9e0b3; border-radius: 8px; box-shadow: 0 0 0 3px #c6f05a">
+<span style="position: absolute; top: 8px; left: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #4a4a50"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #23262b"></span>Cursor here</span>
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap">
+<div class="node">Neovim + mdpeek.lua</div>
+<div class="edge"><span>JSON over socket</span><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M0 5h68M64 1.5 68 5l-4 3.5"></path></svg></div>
+<div class="node">mdpeek.app</div>
+<div class="edge"><span>cmark-gfm HTML</span><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M0 5h68M64 1.5 68 5l-4 3.5"></path></svg><svg viewBox="0 0 72 10" aria-hidden="true"><path d="M72 5H4M8 1.5 4 5l4 3.5"></path></svg><span>scroll, outline</span></div>
+<div class="node">WKWebView</div>
+</div>
+</figure>
+<ul style="padding-left: 2em">
+<li><code>Sources/mdpeek</code> – the AppKit app: window with sidebar, <code>WKWebView</code> preview, FSEvents file watcher, cmark-gfm rendering, and the editor pane.</li>
+<li><code>Resources/mdpeek.lua</code> – loaded into the editor’s Neovim; reports its scroll position, unsaved changes and background color to mdpeek over a Unix socket.</li>
+</ul>
+</article>
+</section>
+</div>
+
+<footer style="min-height: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 0 8px 0 16px; border-top: 1px solid #e3e3e6; font-size: 11px; color: #5c5c63">
+<span>851 words · 4 min read</span>
+<span>Layout · 9 of 9</span>
+<div style="margin-left: auto; display: flex; align-items: center; gap: 8px">
+<button type="button" aria-pressed="true" aria-label="Editor and preview linked: they scroll and zoom together. Click to unlink." style="height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid #d6d6da; border-radius: 6px; background: #ffffff; color: #23262b; font: 500 11px -apple-system, sans-serif"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="width: 13px; height: 13px; stroke-width: 1.6"><path d="M6.5 9.5 9.5 6.5"></path><path d="M7.2 4.6 8.4 3.4a2.6 2.6 0 0 1 3.7 3.7l-1.2 1.2"></path><path d="M8.8 11.4 7.6 12.6a2.6 2.6 0 0 1-3.7-3.7l1.2-1.2"></path></svg>Linked</button>
+<div role="group" aria-label="Zoom" style="height: 22px; display: flex; align-items: stretch; border: 1px solid #d6d6da; border-radius: 6px; background: #ffffff; overflow: hidden">
+<button type="button" aria-label="Zoom Out" style="width: 24px; border: 0; background: transparent; color: #23262b; font: 13px -apple-system, sans-serif">−</button>
+<button type="button" aria-label="Actual Size" style="min-width: 44px; border: 0; border-left: 1px solid #e3e3e6; border-right: 1px solid #e3e3e6; background: transparent; color: #23262b; font: 500 11px -apple-system, sans-serif; font-variant-numeric: tabular-nums">100%</button>
+<button type="button" aria-label="Zoom In" style="width: 24px; border: 0; background: transparent; color: #23262b; font: 13px -apple-system, sans-serif">+</button>
+</div>
+</div>
+</footer>
+</div>
+</body>
+</html>

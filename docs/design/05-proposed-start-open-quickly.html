@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mdpeek proposed — start page</title>
+<style>
+body{margin:0}
+a{color:#0969da}a:hover{color:#0550ae}
+.tb{display:flex;align-items:center;justify-content:center;width:32px;height:28px;border:0;border-radius:6px;background:transparent;color:#3c3c43}
+.tb svg,.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+kbd{padding:2px 6px;border:1px solid #d1d9e0;border-bottom-width:2px;border-radius:5px;color:#23262b;font:11px -apple-system,BlinkMacSystemFont,sans-serif}
+</style>
+</head>
+<body>
+<div style="width: 100%; min-height: 800px; display: flex; flex-direction: column; background: #fafaf7; color: #23262b; font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif">
+
+<header style="height: 52px; display: flex; align-items: center; gap: 4px; padding: 0 12px 0 20px">
+<div aria-hidden="true" style="display: flex; gap: 8px; margin-right: 12px">
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+<span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+</div>
+<span style="margin: 0 auto 0 8px; font-weight: 600">mdpeek</span>
+</header>
+
+<div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 24px 48px">
+<div style="width: 100%; max-width: 980px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 40px; align-items: center">
+
+<section aria-labelledby="start-title" style="display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center">
+<svg viewBox="0 0 1024 1024" width="104" height="104" aria-hidden="true">
+<rect x="100" y="100" width="824" height="824" rx="185" fill="#23262B"></rect>
+<path d="M196 456C330 240 694 240 828 456C694 672 330 672 196 456Z" fill="#FAFAF7"></path>
+<circle cx="512" cy="456" r="132" fill="#C6F05A"></circle>
+<circle cx="512" cy="456" r="54" fill="#23262B"></circle>
+<circle cx="550" cy="418" r="18" fill="#FAFAF7"></circle>
+<path d="M100 600H924V739A185 185 0 0 1 739 924H285A185 185 0 0 1 100 739Z" fill="#FAFAF7"></path>
+<path d="M100 600H924" stroke="#23262B" stroke-width="28"></path>
+<g fill="#23262B" fill-opacity="0.24"><rect x="196" y="716" width="150" height="26" rx="13"></rect><rect x="196" y="770" width="110" height="26" rx="13"></rect><rect x="678" y="716" width="150" height="26" rx="13"></rect><rect x="718" y="770" width="110" height="26" rx="13"></rect></g>
+</svg>
+<h1 id="start-title" style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Peek at any Markdown file</h1>
+<div style="box-sizing: border-box; width: 100%; max-width: 420px; height: 168px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; border: 1.5px dashed #9aa1ae; border-radius: 14px">
+<p style="margin: 0; color: #4f5661">Drop a .md file here</p>
+<button type="button" style="height: 32px; padding: 0 16px; border: 0; border-radius: 8px; background: #23262b; color: #ffffff; font: 500 13px -apple-system, sans-serif">Open File…</button>
+</div>
+<p style="margin: 0; font-size: 12px; color: #4f5661">From a terminal: <code style="padding: 2px 6px; border: 1px solid #d1d9e0; border-radius: 5px; font: 11px ui-monospace, Menlo, monospace; color: #23262b">mdpeek README.md</code></p>
+</section>
+
+<section aria-labelledby="quick-title" style="display: flex; flex-direction: column; border: 1px solid #e2e2dc; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(35 38 43 / 0.06); overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 8px">
+<h2 id="quick-title" style="margin: 0; font-size: 13px; font-weight: 600">Open Quickly</h2>
+<kbd>⇧⌘O</kbd>
+</div>
+<div style="position: relative; display: flex; align-items: center; margin: 0 12px 8px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="position: absolute; left: 10px; color: #5c5c63"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg>
+<label for="quick-search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search recent files</label>
+<input id="quick-search" type="search" placeholder="Search recent files and folders" style="box-sizing: border-box; width: 100%; height: 36px; padding: 0 12px 0 32px; border: 1px solid #d6d6da; border-radius: 8px; font: inherit">
+</div>
+<ul role="listbox" aria-label="Recent files" style="display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0 8px 8px; list-style: none">
+<li role="option" aria-selected="true" style="height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; background: #c6f05a">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px"><span style="font-weight: 600">README.md</span><span style="font-size: 12px; color: #3a3f47; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">~/src/mdpeek</span></span>
+<span style="font-size: 12px; color: #3a3f47">now</span>
+</li>
+<li role="option" aria-selected="false" style="height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px"><span>SESSION.md</span><span style="font-size: 12px; color: #5c5c63">~/src/mdpeek</span></span>
+<span style="font-size: 12px; color: #5c5c63">2h</span>
+</li>
+<li role="option" aria-selected="false" style="height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px"><span>runbook.md</span><span style="font-size: 12px; color: #5c5c63">~/Notes</span></span>
+<span style="font-size: 12px; color: #5c5c63">Yesterday</span>
+</li>
+<li role="option" aria-selected="false" style="height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px"><span>meeting-notes.md</span><span style="font-size: 12px; color: #5c5c63">~/Documents</span></span>
+<span style="font-size: 12px; color: #5c5c63">Mon</span>
+</li>
+<li role="option" aria-selected="false" style="height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px">
+<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; color: #5c5c63"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px"><span>CONTRIBUTING.md</span><span style="font-size: 12px; color: #5c5c63">~/src/swift-cmark</span></span>
+<span style="font-size: 12px; color: #5c5c63">Oct 14</span>
+</li>
+</ul>
+<div style="display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px; border-top: 1px solid #ececea; background: #fafaf7; font-size: 11px; color: #4f5661">
+<span style="display: flex; align-items: center; gap: 4px"><kbd>↩</kbd> Open</span>
+<span style="display: flex; align-items: center; gap: 4px"><kbd>⌥↩</kbd> Open with Neovim</span>
+<span style="display: flex; align-items: center; gap: 4px"><kbd>⌘⌫</kbd> Remove from list</span>
+</div>
+</section>
+
+</div>
+</div>
+</div>
+</body>
+</html>
