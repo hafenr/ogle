@@ -1,22 +1,47 @@
 <p align="center">
-  <img src="Resources/icon/icon.svg" alt="mdpeek logo" width="128">
+  <img src="Resources/icon/icon.svg" alt="mdpeek logo: an eye with a lime iris above a page reading md" width="160">
 </p>
 
-# mdpeek
+<h1 align="center">mdpeek</h1>
 
-A native macOS viewer for Markdown files with embedded Mermaid diagrams, rendered the way GitHub renders them.
+<p align="center">A native macOS viewer for Markdown files with embedded Mermaid diagrams, rendered the way GitHub renders them, with Neovim beside it when you want to edit.</p>
+
+## Features
+
+### Reading
 
 - GitHub Flavored Markdown via [cmark-gfm](https://github.com/swiftlang/swift-cmark) (the parser GitHub uses): tables, task lists, footnotes, autolinks, alerts (`> [!NOTE]`), heading anchors, syntax highlighting, sanitized raw HTML.
 - ```` ```mermaid ```` blocks are rendered as diagrams in colors matching the page. Hover a diagram to copy it as SVG, show its source, or open it full window. A diagram that fails to parse shows its source with line numbers, the error message, and the offending line/token highlighted; the rest of the document renders normally.
 - Code blocks show their language and a Copy button.
-- Reloads automatically when the file changes (including atomic saves by editors such as vim or VS Code), keeping the scroll position anchored to the content you were looking at, and the zoom level. Blocks that were added or changed flash lime and fade out, and a notice says how many changed (“Reloaded · 2 blocks changed”), with a Show button that scrolls to the first.
-- Editor pane (⌃⌘E or the toolbar button): Neovim, bundled with the app, running in a terminal next to the preview with your own configuration (`~/.config/nvim`, plugins, keybindings, Vimscript or Lua). It starts through your login shell, so plugins find the same tools as in your terminal. The preview reloads when you save. The editor and the preview scroll together, whichever you scroll, and the editor opens where you are reading; a diagram corresponds to the lines of its source. While linked, the block holding Neovim's cursor is marked with a lime bar on its left in the preview (View › Highlight Cursor in Preview turns this off). Files you open in mdpeek open in Neovim too, and zooming scales its text along with the preview. Click the chain-link button on the divider between them (or View › Link Editor and Preview) to unlink them: they then scroll independently, and zooming applies to whichever has focus. Linking them again brings the other one to the zoom level and position of the one you last scrolled or zoomed, which stays where it is. While Neovim has unsaved changes, the window shows them as edited ("— Edited" in the subtitle) and a pill on the preview says it shows the last save, until you `:w`. Quitting Neovim closes the pane, and mdpeek asks before discarding unsaved changes.
-- Sidebar (⌃⌘S or the toolbar button) with an Outline | Files switch. Outline (the default once a document is open) lists its headings, marks the section you are reading with a lime dot, and jumps to a heading when you click it. Files lists recently opened files; right-click one to show it in Finder or remove it. The filter field filters whichever list is shown.
-- A slim toolbar: Find, the editor toggle, and a More menu with Open in Editor (⌥⌘O, the default app for the file other than mdpeek), Share, Export as PDF (⇧⌘E) and Print (⌘P). Zoom with ⌘+ / ⌘− / ⌘0, the View menu or the status bar.
-- Find bar (⌘F) between the toolbar and the preview: shows the number of matches (“2 of 8”), highlights all of them and the current one more strongly, and goes through them with Return / ⇧Return, ⌘G / ⇧⌘G or the arrow buttons. Aa matches case. Done or Esc closes it.
-- Status bar below the preview (and the editor) with word count, reading time and the current section, and the zoom control (− 100% +).
-- A start page while no file is open: drop a file on the window or use Open File…, or pick one of your five most recent files in the Open Quickly card (search them by name or folder; Return opens the selected file, ⌥Return opens it with the editor, ⌘⌫ removes it from the list). ⇧⌘O (File › Open Quickly…) focuses the card, or opens the same list as a sheet over an open document.
+- Reloads automatically when the file changes (including atomic saves by editors such as vim or VS Code), keeping the scroll position anchored to the content you were looking at, and the zoom level. Blocks that were added or changed flash lime and fade out, and a notice says how many changed ("Reloaded · 2 blocks changed"), with a Show button that scrolls to the first.
 - Light and dark mode follow the system.
+
+### Editing with Neovim
+
+- The editor pane (⌃⌘E or the toolbar button) runs Neovim, bundled with the app, in a terminal next to the preview, with your own configuration (`~/.config/nvim`, plugins, keybindings, Vimscript or Lua). It starts through your login shell, so plugins find the same tools as in your terminal. Files you open in mdpeek open in Neovim too, and the preview reloads when you save.
+- Linked (the default), the editor and the preview scroll together, whichever you scroll, and the editor opens where you are reading; a diagram corresponds to the lines of its source. Zooming scales the editor's text along with the preview, and the block holding Neovim's cursor is marked with a lime bar on its left in the preview (View › Highlight Cursor in Preview turns this off).
+- Click the chain-link button on the divider between them (or View › Link Editor and Preview) to unlink them: they then scroll independently, and zooming applies to whichever has focus. Linking them again brings the other one to the zoom level and position of the one you last scrolled or zoomed, which stays where it is.
+- While Neovim has unsaved changes, the window shows them as edited ("— Edited" in the subtitle) and a pill on the preview says it shows the last save, until you `:w`. Quitting Neovim closes the pane, and mdpeek asks before discarding unsaved changes.
+
+### Finding your way
+
+- Find bar (⌘F) between the toolbar and the preview: shows the number of matches ("2 of 8"), highlights all of them and the current one more strongly, and goes through them with Return / ⇧Return, ⌘G / ⇧⌘G or the arrow buttons. Aa matches case. Done or Esc closes it.
+- Sidebar (⌃⌘S or the toolbar button) with an Outline | Files switch. Outline (the default once a document is open) lists its headings, marks the section you are reading with a lime dot, and jumps to a heading when you click it. Files lists recently opened files; right-click one to show it in Finder or remove it. The filter field filters whichever list is shown.
+- Open Quickly (⇧⌘O): your recent files, searchable by name or folder. Return opens the selected file, ⌥Return opens it with the editor, ⌘⌫ removes it from the list. With no file open, the start page shows it as a card next to the drop zone; over a document it opens as a sheet.
+- Status bar below the preview (and the editor) with word count, reading time and the current section, and the zoom control (− 100% +).
+- A slim toolbar: Find, the editor toggle, and a More menu with Open in Editor (the default app for the file other than mdpeek), Share, Export as PDF and Print.
+
+### Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| ⌘O / ⇧⌘O | Open… / Open Quickly… |
+| ⌘F, ⌘G / ⇧⌘G | Find, next / previous match |
+| ⌃⌘E | Show or hide the editor |
+| ⌃⌘S | Show or hide the sidebar |
+| ⌘+ / ⌘− / ⌘0 | Zoom in / out / actual size |
+| ⌥⌘O | Open in the default editor |
+| ⇧⌘E / ⌘P | Export as PDF / Print |
 
 ## Installation
 
@@ -78,7 +103,7 @@ defaults delete dev.mdpeek    # recent files and window layout
 Push a version tag. The Package workflow builds the app with that version and publishes a GitHub release with `mdpeek.zip`:
 
 ```sh
-git tag v0.2.0 && git push origin v0.2.0
+git tag -a v0.3.0 -m "mdpeek v0.3.0" && git push origin v0.3.0
 ```
 
 ## Usage
@@ -92,6 +117,7 @@ Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek fro
 ## Layout
 
 - `Sources/mdpeek` – the AppKit app: window with sidebar, `WKWebView` preview, FSEvents file watcher, cmark-gfm rendering, and the editor pane ([SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) running Neovim).
-- `Resources/mdpeek.lua` – loaded into the editor's Neovim; reports its scroll position, unsaved changes and background color to mdpeek over a Unix socket, and opens and scrolls to what mdpeek shows. The Neovim release is pinned in `build.sh`.
+- `Resources/mdpeek.lua` – loaded into the editor's Neovim; reports its scroll position, cursor line, unsaved changes and background color to mdpeek over a Unix socket, and opens and scrolls to what mdpeek shows. The Neovim release is pinned in `build.sh`.
 - `Resources/AppIcon.icns`, `Resources/icon/` – the app icon and its SVG sources; `scripts/make_icon.py` regenerates them. `icon.svg` (the logo, with the tile as a slab casting a shadow) is for the README and the start page; the app icon is built from `icon-app.svg` and `icon-small.svg`, which keep to the standard rounded square so macOS shows them full size.
-- `Resources/web` – the page that displays the rendered HTML (`mdpeek.js` handles sanitizing, alerts, highlighting, Mermaid, and scroll preservation). Its third-party libraries are pinned in `package.json` and copied into the app bundle by `build.sh`.
+- `Resources/web` – the page that displays the rendered HTML and the start page (`mdpeek.js` handles sanitizing, alerts, highlighting, Mermaid, scroll preservation, find, the reload and cursor highlights, and Open Quickly). Its third-party libraries are pinned in `package.json` and copied into the app bundle by `build.sh`.
+- `docs/design` – the HTML mockups of the window's design, with its colors (ink #23262B, lime #C6F05A, paper #FAFAF7).
