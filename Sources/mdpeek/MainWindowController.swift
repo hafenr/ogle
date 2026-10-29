@@ -72,7 +72,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         editorItem.isCollapsed = true
 
         statusBar.onZoom = { [weak self] step in self?.changeZoom(step) }
-        statusBar.onToggleLinked = { [weak self] in self?.toggleLinked(nil) }
+        content.onToggleLinked = { [weak self] in self?.toggleLinked(nil) }
         updateZoomLabel()
 
         let toolbar = NSToolbar(identifier: "MainToolbar")
@@ -297,9 +297,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
-    /// Shows the link toggle while the editor is shown.
+    /// Shows the link button on the divider while the editor is shown.
     private func updateLinkToggle() {
-        statusBar.linkState = editorItem.isCollapsed ? nil : linked
+        content.linkState = editorItem.isCollapsed ? nil : linked
     }
 
     /// Shows the editor button pressed while the editor is shown.
