@@ -389,22 +389,48 @@ window.ogle = (() => {
   // Text that is not shown, or is part of the page's own controls, is not searched.
   const UNSEARCHED = "[hidden], .anchor, .md-button, .code-block-header, style, script";
 
-  function findRanges(query, caseSensitive) {
-    const pattern = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), caseSensitive ? "gu" : "giu");
-    const ranges = [];
+  // Elements whose text a match may not run into or out of.
+  const SEARCH_BLOCKS = "p, li, dt, dd, h1, h2, h3, h4, h5, h6, th, td, pre, blockquote, figcaption, summary, div, text";
+
+  // The text of the content as one string, so matches can run across formatting and the
+  // tokens of highlighted code, with where each text node starts in it. Blocks are separated
+  // by a NUL character, which no query matches.
+  function searchableText() {
+    let text = "";
+    const nodes = [];
+    let lastBlock = null;
     const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
       acceptNode: (node) => (node.parentElement?.closest(UNSEARCHED) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
     });
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      for (const match of node.data.matchAll(pattern)) {
-        if (!match[0]) continue;
-        const range = new Range();
-        range.setStart(node, match.index);
-        range.setEnd(node, match.index + match[0].length);
-        ranges.push(range);
+      const block = node.parentElement.closest(SEARCH_BLOCKS);
+      if (block !== lastBlock) {
+        text += "\0";
+        lastBlock = block;
       }
+      nodes.push({ node, start: text.length });
+      text += node.data;
     }
-    return ranges;
+    return { text, nodes };
+  }
+
+  // Whitespace in the query matches any whitespace, such as a line break within a paragraph.
+  function findRanges(query, caseSensitive) {
+    const source = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+    const pattern = new RegExp(source, caseSensitive ? "gu" : "giu");
+    const { text, nodes } = searchableText();
+    // Matches come in order, so the text node holding an offset is found by moving forward.
+    let index = 0;
+    const position = (offset) => {
+      while (index + 1 < nodes.length && nodes[index + 1].start <= offset) index++;
+      return [nodes[index].node, offset - nodes[index].start];
+    };
+    return [...text.matchAll(pattern)].map((match) => {
+      const range = new Range();
+      range.setStart(...position(match.index));
+      range.setEnd(...position(match.index + match[0].length));
+      return range;
+    });
   }
 
   function paintFind() {
