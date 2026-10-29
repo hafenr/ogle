@@ -875,7 +875,7 @@ window.mdpeek = (() => {
     return isDiagram ? [start + 1, end - 1] : [start, end];
   }
 
-  // The source line of the editor's cursor: the innermost block holding it is outlined. A block
+  // The source line of the editor's cursor: the innermost block holding it is marked. A block
   // holds the lines of its source, a diagram those of its fenced block.
   let cursorLine = null;
   function setCursorLine(line) {

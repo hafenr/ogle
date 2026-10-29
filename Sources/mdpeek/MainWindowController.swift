@@ -212,7 +212,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         previewTopLine = editorTopLine.line
     }
 
-    /// Outlines, in the preview, the block holding Neovim's cursor: while linked, with the editor
+    /// Marks, in the preview, the block holding Neovim's cursor: while linked, with the editor
     /// shown on the same file, unless turned off in the View menu.
     private func updateCursorLine() {
         guard highlightsCursor, linked, !editorItem.isCollapsed, let editorCursorLine, let url = preview.documentURL,
