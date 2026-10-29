@@ -8,7 +8,7 @@
 
 - Markdown with Mermaid diagrams, syntax highlighting and alerts
 - Neovim built in, with your own config, beside the preview
-- Scroll lock: the editor and the preview scroll and zoom together, or apart
+- Linked panes: the editor and the preview scroll and zoom together, or apart
 - Reloads on save and highlights what changed
 - Find with match counts, an outline sidebar, and Open Quickly for recent files
 - Native macOS, light and dark
