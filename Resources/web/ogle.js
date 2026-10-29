@@ -178,7 +178,10 @@ window.ogle = (() => {
       when.textContent = file.when;
       item.append(text, when);
       item.addEventListener("mousemove", () => selectQuick(i));
-      item.addEventListener("click", (event) => openQuick(event.altKey));
+      item.addEventListener("click", (event) => {
+        selectQuick(i);
+        openQuick(event.altKey);
+      });
       return item;
     }));
     quickSearch.setAttribute("aria-activedescendant", quickFiles.length ? `quick-${quickSelection}` : "");
