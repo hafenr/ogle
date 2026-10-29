@@ -47,7 +47,7 @@ final class DividerLinkButton: NSButton {
             // Ink with a paper chain, outlined in gray so it shows against dark editor themes
             // and dark mode too.
             layer?.backgroundColor = resolvedCGColor(Palette.ink)
-            layer?.borderColor = resolvedCGColor(NSColor(srgbHex: 0x8B9099))
+            layer?.borderColor = resolvedCGColor(NSColor(srgbHex: 0x6E737C))
             layer?.borderWidth = 1.5
             contentTintColor = Palette.paper
             layer?.shadowOpacity = 0.18
