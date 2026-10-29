@@ -16,7 +16,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     private let editor = EditorViewController()
     private let sidebarItem: NSSplitViewItem
     private let editorItem: NSSplitViewItem
-    private let splitView: NSSplitView
+    private let content: ContentViewController
+    private var statusBar: StatusBarView { content.statusBar }
+    /// The split view of the editor and the preview.
+    private var editorSplitView: NSSplitView { content.split.splitView }
     /// The width of the editor when last shown.
     private var editorWidth: CGFloat?
     private let preview = PreviewViewController()
@@ -30,8 +33,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     private var editorButton: NSButton?
     /// The picker behind the More menu's Share item.
     private var sharePicker: NSSharingServicePicker?
-    private let zoomControl = NSSegmentedControl(
-        labels: ["−", "100%", "+"], trackingMode: .momentary, target: nil, action: nil)
 
     init() {
         sidebar = SidebarViewController(recents: recents)
@@ -40,11 +41,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         editorItem = NSSplitViewItem(viewController: editor)
         editorItem.canCollapse = true
         editorItem.minimumThickness = 320
+        content = ContentViewController(items: [editorItem, NSSplitViewItem(viewController: preview)])
         split.addSplitViewItem(sidebarItem)
-        split.addSplitViewItem(editorItem)
-        split.addSplitViewItem(NSSplitViewItem(viewController: preview))
-        split.splitView.autosaveName = "MainSplitView"
-        splitView = split.splitView
+        split.addSplitViewItem(NSSplitViewItem(viewController: content))
+        // Not "MainSplitView", which saved the layout of three panes side by side.
+        split.splitView.autosaveName = "SidebarSplitView"
         // Nothing to list yet on first launch: start with the start page alone.
         if recents.urls.isEmpty { sidebarItem.isCollapsed = true }
 
@@ -65,12 +66,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         // closed regardless.
         editorItem.isCollapsed = true
 
-        zoomControl.target = self
-        zoomControl.action = #selector(zoomControlClicked(_:))
-        zoomControl.setWidth(52, forSegment: 1)
-        zoomControl.setToolTip("Zoom Out", forSegment: 0)
-        zoomControl.setToolTip("Actual Size", forSegment: 1)
-        zoomControl.setToolTip("Zoom In", forSegment: 2)
+        statusBar.onZoom = { [weak self] step in self?.changeZoom(step) }
+        statusBar.onToggleLinked = { [weak self] in self?.toggleLinked(nil) }
+        updateZoomLabel()
 
         let toolbar = NSToolbar(identifier: "MainToolbar")
         toolbar.delegate = self
@@ -82,6 +80,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         preview.onOpenMarkdown = { [weak self] url in self?.open(url) }
         preview.onOutlineChange = { [weak self] headings in self?.sidebar.setHeadings(headings) }
         preview.onSectionChange = { [weak self] id in self?.sidebar.setCurrentHeading(id) }
+        preview.onWordCountChange = { [weak self] words in self?.statusBar.setWordCount(words) }
+        preview.onSectionTextChange = { [weak self] text in self?.statusBar.setSection(text) }
         preview.onZoomChange = { [weak self] zoom in
             guard let self else { return }
             if linked { editor.zoom = zoom }
@@ -118,6 +118,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         window?.representedURL = url
         sidebar.select(url)
         previewTopLine = nil
+        statusBar.isActive = true
         updateEditorButton()
         if !editorItem.isCollapsed {
             editor.open(url, atLine: nil)
@@ -129,11 +130,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     private func setEditorVisible(_ visible: Bool) {
         if visible {
             editorItem.isCollapsed = false
-            splitView.layoutSubtreeIfNeeded()
-            // At its last width, or the first time sharing the space beside the sidebar evenly
-            // with the preview.
-            let start = sidebarItem.isCollapsed ? 0 : sidebar.view.frame.maxX + splitView.dividerThickness
-            splitView.setPosition(start + (editorWidth ?? (splitView.bounds.maxX - start) / 2), ofDividerAt: 1)
+            editorSplitView.layoutSubtreeIfNeeded()
+            // At its last width, or the first time sharing the space evenly with the preview.
+            editorSplitView.setPosition(editorWidth ?? editorSplitView.bounds.width / 2, ofDividerAt: 0)
             if let url = preview.documentURL {
                 // Where the preview is, if scrolled; otherwise where Neovim shows the file.
                 let line = linked ? previewTopLine : nil
@@ -145,6 +144,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             editorItem.isCollapsed = true
         }
         updateEditorButton()
+        updateLinkToggle()
         window?.makeFirstResponder(visible ? editor.focusView : preview.focusView)
         updateSourceLine()
     }
@@ -195,6 +195,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     @objc func toggleLinked(_ sender: Any?) {
         linked.toggle()
+        updateLinkToggle()
         if linked {
             syncToFocusedPane()
         } else {
@@ -226,6 +227,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
+    /// Shows the link toggle while the editor is shown.
+    private func updateLinkToggle() {
+        statusBar.linkState = editorItem.isCollapsed ? nil : linked
+    }
+
     /// Shows the editor button pressed while the editor is shown.
     private func updateEditorButton() {
         guard let editorButton else { return }
@@ -239,14 +245,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     @objc func zoomIn(_ sender: Any?) { changeZoom(.larger) }
     @objc func zoomOut(_ sender: Any?) { changeZoom(.smaller) }
     @objc func actualSize(_ sender: Any?) { changeZoom(.actualSize) }
-
-    @objc private func zoomControlClicked(_ sender: NSSegmentedControl) {
-        switch sender.selectedSegment {
-        case 0: changeZoom(.smaller)
-        case 2: changeZoom(.larger)
-        default: changeZoom(.actualSize)
-        }
-    }
 
     private var editorHasFocus: Bool {
         guard !editorItem.isCollapsed, let responder = window?.firstResponder as? NSView else { return false }
@@ -268,8 +266,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     /// Shows the zoom level of what zooming applies to.
     private func updateZoomLabel() {
-        let zoom = zoomsEditor ? editor.zoom : preview.zoom
-        zoomControl.setLabel("\(Int((zoom * 100).rounded()))%", forSegment: 1)
+        statusBar.setZoom(zoomsEditor ? editor.zoom : preview.zoom)
     }
 
     @objc func showFind(_ sender: Any?) {

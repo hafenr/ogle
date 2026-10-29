@@ -12,7 +12,6 @@ struct Heading: Equatable {
 final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
     private let pageURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")!
     private var webView: DropTargetWebView!
-    private let statusBar = StatusBarView()
     private var isPageLoaded = false
     private var document: (url: URL, data: Data)?
     private var watcher: FileWatcher?
@@ -26,6 +25,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     /// Called with the source line at the top of the view as the user scrolls it.
     var onScroll: ((Int) -> Void)?
     var onZoomChange: ((CGFloat) -> Void)?
+    var onWordCountChange: ((Int) -> Void)?
+    /// Called with the current section as the status bar shows it: "Download · 3 of 9".
+    var onSectionTextChange: ((String?) -> Void)?
 
     var documentURL: URL? { document?.url }
     /// The source line kept at the top of the view while it follows the editor.
@@ -37,7 +39,10 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
                 in: nil, in: .page)
         }
     }
-    var zoom: CGFloat { webView.pageZoom }
+    var zoom: CGFloat {
+        loadViewIfNeeded()
+        return webView.pageZoom
+    }
     /// The view that should have keyboard focus, so the document scrolls with the keyboard.
     var focusView: NSView {
         loadViewIfNeeded()
@@ -55,17 +60,12 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
         let container = NSView()
         webView.translatesAutoresizingMaskIntoConstraints = false
-        statusBar.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(webView)
-        container.addSubview(statusBar)
         NSLayoutConstraint.activate([
             webView.topAnchor.constraint(equalTo: container.topAnchor),
             webView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            webView.bottomAnchor.constraint(equalTo: statusBar.topAnchor),
-            statusBar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            statusBar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            statusBar.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            webView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
         ])
         view = container
         // Read access to the whole file system so documents can reference images anywhere.
@@ -76,7 +76,6 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         document = (url, try Data(contentsOf: url))
         sourceLine = nil
         watcher = FileWatcher(url: url) { [weak self] in self?.reload() }
-        statusBar.isActive = true
         render(preserveScroll: false)
     }
 
@@ -186,7 +185,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
                 else { return nil }
                 return Heading(id: id, level: level, title: title)
             }
-            statusBar.setWordCount((body["words"] as? NSNumber)?.intValue ?? 0)
+            onWordCountChange?((body["words"] as? NSNumber)?.intValue ?? 0)
             onOutlineChange?(headings)
             updateStatusSection()
         case "section":
@@ -213,10 +212,10 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
     private func updateStatusSection() {
         guard let index = headings.firstIndex(where: { $0.id == currentHeadingID }) else {
-            statusBar.setSection(nil)
+            onSectionTextChange?(nil)
             return
         }
-        statusBar.setSection("\(headings[index].title) · \(index + 1) of \(headings.count)")
+        onSectionTextChange?("\(headings[index].title) · \(index + 1) of \(headings.count)")
     }
 
     // MARK: WKNavigationDelegate
