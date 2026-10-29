@@ -117,6 +117,7 @@ window.mdpeek = (() => {
     postOutline();
     updateSection(true);
     refreshFind();
+    markCursorBlock();
     if (preserveScroll && !quiet) showChanges(before);
   }
 
@@ -784,6 +785,29 @@ window.mdpeek = (() => {
     return isDiagram ? [start + 1, end - 1] : [start, end];
   }
 
+  // The source line of the editor's cursor: the innermost block holding it is outlined. A block
+  // holds the lines of its source, a diagram those of its fenced block.
+  let cursorLine = null;
+  function setCursorLine(line) {
+    cursorLine = line;
+    markCursorBlock();
+  }
+
+  function markCursorBlock() {
+    let block = null;
+    if (cursorLine) {
+      for (const element of content.querySelectorAll("[data-sourcepos]")) {
+        const [start, end] = element.dataset.sourcepos.match(/^(\d+):\d+-(\d+)/).slice(1).map(Number);
+        if (start > cursorLine) break;
+        if (cursorLine <= end) block = element;
+      }
+    }
+    for (const element of content.querySelectorAll(".mdpeek-cursor")) {
+      if (element !== block) element.classList.remove("mdpeek-cursor");
+    }
+    block?.classList.add("mdpeek-cursor");
+  }
+
   // Scrolls so that Markdown source line `line` is at the top of the window.
   function scrollToSourceLine(line) {
     let top = 0;
@@ -810,5 +834,5 @@ window.mdpeek = (() => {
     return Math.floor(line);
   }
 
-  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind, showUnsavedNotice };
+  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind, showUnsavedNotice, setCursorLine };
 })();

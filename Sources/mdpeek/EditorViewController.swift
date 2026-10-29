@@ -14,6 +14,8 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
 
     /// Called with the first line Neovim shows of a file, whenever it changes.
     var onScroll: ((URL, Int) -> Void)?
+    /// Called with the file and line of Neovim's cursor as it moves.
+    var onCursorMove: ((URL, Int) -> Void)?
     /// Called when Neovim gets unsaved changes, and when it no longer has any.
     var onUnsavedChangesChange: ((Bool) -> Void)?
     /// Called when Neovim quits normally.
@@ -67,6 +69,7 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
         connection.onEvent = { [weak self] event in
             switch event {
             case .scroll(let path, let line): self?.onScroll?(URL(fileURLWithPath: path), line)
+            case .cursor(let path, let line): self?.onCursorMove?(URL(fileURLWithPath: path), line)
             case .modified(let modified): self?.hasUnsavedChanges = modified
             case .background(let color): self?.session?.terminal.setBackground(color)
             }

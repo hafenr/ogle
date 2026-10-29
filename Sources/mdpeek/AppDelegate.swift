@@ -75,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         viewMenu.addItem(withTitle: "Toggle Editor", action: #selector(MainWindowController.toggleEditor(_:)), keyEquivalent: "e")
             .keyEquivalentModifierMask = [.command, .control]
         viewMenu.addItem(withTitle: "Link Editor and Preview", action: #selector(MainWindowController.toggleLinked(_:)), keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Highlight Cursor in Preview", action: #selector(MainWindowController.toggleCursorHighlight(_:)), keyEquivalent: "")
         viewMenu.addItem(.separator())
         viewMenu.addItem(withTitle: "Actual Size", action: #selector(MainWindowController.actualSize(_:)), keyEquivalent: "0")
         viewMenu.addItem(withTitle: "Zoom In", action: #selector(MainWindowController.zoomIn(_:)), keyEquivalent: "+")

@@ -44,6 +44,15 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
                 in: nil, in: .page)
         }
     }
+    /// The source line of the editor's cursor, whose block the page outlines, if any.
+    var cursorLine: Int? {
+        didSet {
+            guard isPageLoaded, cursorLine != oldValue else { return }
+            webView.callAsyncJavaScript(
+                "mdpeek.setCursorLine(line)", arguments: ["line": cursorLine.map(NSNumber.init) ?? NSNull()],
+                in: nil, in: .page)
+        }
+    }
     /// Whether to note that the preview shows the last save while the editor has unsaved changes.
     var showsUnsavedNotice = false {
         didSet {
@@ -301,6 +310,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         isPageLoaded = true
         if showsUnsavedNotice {
             webView.callAsyncJavaScript("mdpeek.showUnsavedNotice(true)", in: nil, in: .page)
+        }
+        if let cursorLine {
+            webView.callAsyncJavaScript("mdpeek.setCursorLine(line)", arguments: ["line": cursorLine], in: nil, in: .page)
         }
         if document == nil {
             webView.callAsyncJavaScript("mdpeek.showWelcome()", in: nil, in: .page)

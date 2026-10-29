@@ -1,7 +1,7 @@
 -- Connects the Neovim of mdpeek's editor pane to mdpeek, over the socket in $MDPEEK_SOCKET.
 -- Loaded with --cmd, before the user's configuration. Both sides send JSON objects, one per
--- line: Neovim reports the first line shown in a window, whether any buffer has unsaved
--- changes and its background color, and mdpeek asks it to open the files it displays and to
+-- line: Neovim reports the first line shown in a window, the line of the cursor, whether any
+-- buffer has unsaved changes and its background color, and mdpeek asks it to open the files it displays and to
 -- scroll to the line at the top of the preview. $MDPEEK_LINE, if set, is the line to show
 -- the file at once Neovim's terminal UI has attached, which sets the size of its windows.
 
@@ -111,6 +111,34 @@ local function report_modified()
   end
 end
 
+-- Reports the cursor's line in the current file, at most every 50 ms, so the preview can
+-- outline the block it is in.
+local cursor_timer = vim.uv.new_timer()
+local cursor_scheduled = false
+local last_cursor
+local function report_cursor()
+  local buffer = vim.api.nvim_get_current_buf()
+  if vim.bo[buffer].buftype ~= "" then
+    return
+  end
+  local cursor = { event = "cursor", path = vim.api.nvim_buf_get_name(buffer), line = vim.api.nvim_win_get_cursor(0)[1] }
+  if not vim.deep_equal(cursor, last_cursor) then
+    last_cursor = cursor
+    send(cursor)
+  end
+end
+
+local function schedule_cursor_report()
+  if cursor_scheduled then
+    return
+  end
+  cursor_scheduled = true
+  cursor_timer:start(50, 0, vim.schedule_wrap(function()
+    cursor_scheduled = false
+    report_cursor()
+  end))
+end
+
 local function report_background()
   send({ event = "background", color = vim.api.nvim_get_hl(0, { name = "Normal", link = false }).bg })
 end
@@ -143,6 +171,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
   callback = function()
     report_scroll(vim.api.nvim_get_current_win())
   end,
+})
+vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "BufEnter" }, {
+  group = group,
+  callback = schedule_cursor_report,
 })
 -- Deleted buffers are still listed while their autocommands run.
 vim.api.nvim_create_autocmd({ "BufModifiedSet", "BufDelete", "BufWipeout" }, {

@@ -7,6 +7,8 @@ final class EditorConnection {
     enum Event: Decodable {
         /// The first line shown in a window on the file at `path`.
         case scroll(path: String, line: Int)
+        /// The line of the cursor, in a window on the file at `path`.
+        case cursor(path: String, line: Int)
         /// Whether any buffer has unsaved changes.
         case modified(Bool)
         /// The background color of Neovim's Normal highlight, as 0xRRGGBB, if it has one.
@@ -21,6 +23,10 @@ final class EditorConnection {
             switch try container.decode(String.self, forKey: .event) {
             case "scroll":
                 self = .scroll(
+                    path: try container.decode(String.self, forKey: .path),
+                    line: try container.decode(Int.self, forKey: .line))
+            case "cursor":
+                self = .cursor(
                     path: try container.decode(String.self, forKey: .path),
                     line: try container.decode(Int.self, forKey: .line))
             case "modified":

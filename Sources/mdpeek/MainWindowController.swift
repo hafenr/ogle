@@ -27,6 +27,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// unlinked, zooming applies to whichever has focus.
     private var linked = true
     private var editorTopLine: (url: URL, line: Int)?
+    private var editorCursorLine: (url: URL, line: Int)?
+    /// Whether the preview outlines the block holding Neovim's cursor, while linked.
+    private var highlightsCursor = UserDefaults.standard.object(forKey: "highlightCursor") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(highlightsCursor, forKey: "highlightCursor") }
+    }
     /// The source line at the top of the preview, once scrolled away from the top.
     private var previewTopLine: Int?
     private var findButton: NSButton?
@@ -93,6 +98,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
         editor.onUnsavedChangesChange = { [weak self] _ in self?.updateEditedState() }
+        editor.onCursorMove = { [weak self] url, line in
+            self?.editorCursorLine = (url, line)
+            self?.updateCursorLine()
+        }
         preview.onScroll = { [weak self] line in self?.previewScrolled(to: line) }
         preview.onFindBarChange = { [weak self] shown in self?.findButton?.state = shown ? .on : .off }
     }
@@ -122,6 +131,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         previewTopLine = nil
         statusBar.isActive = true
         updateEditorButton()
+        updateCursorLine()
         if !editorItem.isCollapsed {
             editor.open(url, atLine: nil)
         }
@@ -159,6 +169,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
         updateEditorButton()
         updateLinkToggle()
+        updateCursorLine()
         window?.makeFirstResponder(visible ? editor.focusView : preview.focusView)
         updateSourceLine()
     }
@@ -172,6 +183,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
         preview.sourceLine = editorTopLine.line
         previewTopLine = editorTopLine.line
+    }
+
+    /// Outlines, in the preview, the block holding Neovim's cursor: while linked, with the editor
+    /// shown on the same file, unless turned off in the View menu.
+    private func updateCursorLine() {
+        guard highlightsCursor, linked, !editorItem.isCollapsed, let editorCursorLine, let url = preview.documentURL,
+            editorCursorLine.url.resolvingSymlinksInPath() == url.resolvingSymlinksInPath()
+        else {
+            preview.cursorLine = nil
+            return
+        }
+        preview.cursorLine = editorCursorLine.line
     }
 
     private func previewScrolled(to line: Int) {
@@ -210,12 +233,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     @objc func toggleLinked(_ sender: Any?) {
         linked.toggle()
         updateLinkToggle()
+        updateCursorLine()
         if linked {
             syncToFocusedPane()
         } else {
             updateSourceLine()
         }
         updateZoomLabel()
+    }
+
+    @objc func toggleCursorHighlight(_ sender: Any?) {
+        highlightsCursor.toggle()
+        updateCursorLine()
     }
 
     /// On linking, brings the other pane to the zoom level and scroll position of the one with
@@ -346,6 +375,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         case #selector(printDocument(_:)), #selector(exportPDF(_:)), #selector(openInEditor(_:)),
             #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)), #selector(toggleEditor(_:)):
             return preview.documentURL != nil
+        case #selector(toggleCursorHighlight(_:)):
+            menuItem.state = highlightsCursor ? .on : .off
+            return true
         case #selector(toggleLinked(_:)):
             menuItem.state = linked ? .on : .off
             return !editorItem.isCollapsed

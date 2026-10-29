@@ -496,3 +496,10 @@ body.dragging #welcome .drop-zone {
     background: #f0a33a;
   }
 }
+
+/* The block holding the editor's cursor. */
+.markdown-body .mdpeek-cursor {
+  border-radius: 6px;
+  outline: 3px solid var(--lime);
+  outline-offset: 4px;
+}
