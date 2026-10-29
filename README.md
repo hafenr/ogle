@@ -4,7 +4,14 @@
 
 <h1 align="center">Ogle</h1>
 
-<p align="center">A native macOS viewer for Markdown files with embedded Mermaid diagrams, rendered the way GitHub renders them, with Neovim beside it when you want to edit.<br><sub>Formerly mdpeek.</sub></p>
+<p align="center"><b>Ogle at your Markdown files... with vim.</b></p>
+
+- Renders Markdown the way GitHub does, Mermaid diagrams included
+- Neovim built in, with your own config, beside the preview
+- Scroll lock: the editor and the preview scroll and zoom together, or apart
+- Reloads on save and highlights what changed
+- Find with match counts, an outline sidebar, and Open Quickly for recent files
+- Native macOS, light and dark
 
 ## Features
 
