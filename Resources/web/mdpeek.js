@@ -632,5 +632,5 @@ window.mdpeek = (() => {
     return Math.floor(line);
   }
 
-  return { render, showWelcome, scrollToHeading, followSourceLine };
+  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop };
 })();

@@ -113,6 +113,13 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         }
     }
 
+    /// The source line at the top of the view, as the page computes it now.
+    func sourceLineAtTop() async -> Int? {
+        guard isPageLoaded, document != nil else { return nil }
+        let line = try? await webView.callAsyncJavaScript("return mdpeek.sourceLineAtTop()", contentWorld: .page)
+        return (line as? NSNumber)?.intValue
+    }
+
     func scrollToHeading(_ id: String) {
         webView.callAsyncJavaScript("mdpeek.scrollToHeading(id)", arguments: ["id": id], in: nil, in: .page)
     }

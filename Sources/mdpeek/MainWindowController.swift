@@ -215,10 +215,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             editor.zoom = preview.zoom
             preview.sourceLine = nil
             guard let url = preview.documentURL else { return }
-            // No line yet: the preview is at the top.
-            let line = previewTopLine ?? 1
-            editorTopLine = (url, line)
-            editor.scroll(url, toLine: line)
+            Task {
+                // Asks the page: previewTopLine only changes as the preview is scrolled, so it
+                // misses reloads that moved the text since. No line yet: the preview is at the top.
+                let line = await self.preview.sourceLineAtTop() ?? self.previewTopLine ?? 1
+                guard self.linked, self.preview.documentURL == url else { return }
+                self.previewTopLine = line
+                self.editorTopLine = (url, line)
+                self.editor.scroll(url, toLine: line)
+            }
         }
     }
 
