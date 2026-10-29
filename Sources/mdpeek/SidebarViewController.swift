@@ -1,17 +1,24 @@
 import AppKit
 
-/// Recently opened files, and the outline of the current document.
+/// The outline of the current document, or the recently opened files: an "Outline | Files"
+/// switch above a filter field and the list.
 @MainActor
 final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, NSMenuItemValidation {
+    private enum Mode: Int {
+        case outline, files
+    }
+
     private enum Row {
-        case header(String)
         case file(URL)
         case heading(Heading)
     }
 
     private let recents: RecentFiles
+    private let modeControl = NSSegmentedControl(labels: ["Outline", "Files"], trackingMode: .selectOne, target: nil, action: nil)
     private let filterField = NSSearchField()
     private let tableView = NSTableView()
+    private let fileMenu = NSMenu()
+    private var mode = Mode.files
     private var rows: [Row] = []
     private var headings: [Heading] = []
     private var currentHeadingID: String?
@@ -28,7 +35,11 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
-        filterField.placeholderString = "Filter"
+        modeControl.segmentDistribution = .fillEqually
+        modeControl.target = self
+        modeControl.action = #selector(modeChanged)
+        modeControl.setAccessibilityLabel("Sidebar content")
+
         filterField.sendsSearchStringImmediately = true
         filterField.target = self
         filterField.action = #selector(filterChanged)
@@ -41,10 +52,8 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         tableView.delegate = self
         tableView.target = self
         tableView.action = #selector(rowClicked)
-        let menu = NSMenu()
-        menu.addItem(withTitle: "Show in Finder", action: #selector(showClickedRowInFinder), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Remove from Recents", action: #selector(removeClickedRow), keyEquivalent: "").target = self
-        tableView.menu = menu
+        fileMenu.addItem(withTitle: "Show in Finder", action: #selector(showClickedRowInFinder), keyEquivalent: "").target = self
+        fileMenu.addItem(withTitle: "Remove from Recents", action: #selector(removeClickedRow), keyEquivalent: "").target = self
 
         let scrollView = NSScrollView()
         scrollView.documentView = tableView
@@ -53,15 +62,18 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         scrollView.automaticallyAdjustsContentInsets = false
 
         let container = NSView()
-        for view in [filterField, scrollView] {
+        for view in [modeControl, filterField, scrollView] {
             view.translatesAutoresizingMaskIntoConstraints = false
             container.addSubview(view)
         }
         NSLayoutConstraint.activate([
-            filterField.topAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor, constant: 6),
+            modeControl.topAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor, constant: 4),
+            modeControl.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
+            modeControl.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
+            filterField.topAnchor.constraint(equalTo: modeControl.bottomAnchor, constant: 8),
             filterField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
             filterField.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
-            scrollView.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 6),
+            scrollView.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
@@ -70,17 +82,24 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         view = container
 
         recents.onChange = { [weak self] in self?.reload() }
-        reload()
+        setMode(current == nil ? .files : .outline)
     }
 
+    /// Shows the file at `url` as the current one. The first document opened switches to its
+    /// outline; after that the sidebar stays on whichever list the user chose.
     func select(_ url: URL) {
+        let isFirst = current == nil
         current = url
-        syncSelection()
+        if isFirst {
+            setMode(.outline)
+        } else {
+            syncSelection()
+        }
     }
 
     func setHeadings(_ headings: [Heading]) {
         self.headings = headings
-        reload()
+        if mode == .outline { reload() }
     }
 
     func setCurrentHeading(_ id: String?) {
@@ -101,26 +120,37 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         return false
     }
 
+    private func setMode(_ mode: Mode) {
+        self.mode = mode
+        modeControl.selectedSegment = mode.rawValue
+        filterField.stringValue = ""
+        filterField.placeholderString = mode == .outline ? "Filter headings" : "Filter files"
+        tableView.menu = mode == .files ? fileMenu : nil
+        reload()
+        if mode == .outline, let row = rows.firstIndex(where: isCurrentHeading) {
+            tableView.scrollRowToVisible(row)
+        }
+    }
+
+    @objc private func modeChanged() {
+        setMode(Mode(rawValue: modeControl.selectedSegment) ?? .files)
+    }
+
     @objc private func filterChanged() {
         reload()
     }
 
     private func reload() {
         let filter = filterField.stringValue.trimmingCharacters(in: .whitespaces)
-        let files = recents.urls.filter {
-            filter.isEmpty || $0.lastPathComponent.localizedCaseInsensitiveContains(filter)
-                || $0.deletingLastPathComponent().path.localizedCaseInsensitiveContains(filter)
+        switch mode {
+        case .outline:
+            rows = headings.filter { filter.isEmpty || $0.title.localizedCaseInsensitiveContains(filter) }.map(Row.heading)
+        case .files:
+            rows = recents.urls.filter {
+                filter.isEmpty || $0.lastPathComponent.localizedCaseInsensitiveContains(filter)
+                    || $0.deletingLastPathComponent().path.localizedCaseInsensitiveContains(filter)
+            }.map(Row.file)
         }
-        var rows: [Row] = []
-        if !files.isEmpty {
-            rows.append(.header("Recent"))
-            rows += files.map(Row.file)
-        }
-        if !headings.isEmpty {
-            rows.append(.header("On This Page"))
-            rows += headings.map(Row.heading)
-        }
-        self.rows = rows
         isSyncingSelection = true
         tableView.reloadData()
         isSyncingSelection = false
@@ -169,11 +199,6 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         rows.count
     }
 
-    func tableView(_ tableView: NSTableView, isGroupRow row: Int) -> Bool {
-        if case .header = rows[row] { return true }
-        return false
-    }
-
     func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
         if case .file = rows[row] { return true }
         return false
@@ -181,18 +206,13 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         switch rows[row] {
-        case .header: 26
         case .file: 40
-        case .heading: 24
+        case .heading: 28
         }
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         switch rows[row] {
-        case .header(let title):
-            let cell = tableView.makeView(withIdentifier: HeaderCell.identifier, owner: nil) as? HeaderCell ?? HeaderCell()
-            cell.textField?.stringValue = title
-            return cell
         case .file(let url):
             let cell = tableView.makeView(withIdentifier: FileCell.identifier, owner: nil) as? FileCell ?? FileCell()
             cell.show(url, lastOpened: recents.lastOpened(url))
@@ -211,28 +231,6 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         else { return }
         onSelect?(url)
     }
-}
-
-private final class HeaderCell: NSTableCellView {
-    static let identifier = NSUserInterfaceItemIdentifier("HeaderCell")
-
-    init() {
-        super.init(frame: .zero)
-        identifier = Self.identifier
-        let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
-        label.textColor = .secondaryLabelColor
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
-        textField = label
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
-            label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -4),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-        ])
-    }
-
-    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 }
 
 private final class FileCell: NSTableCellView {
@@ -302,35 +300,72 @@ private final class FileCell: NSTableCellView {
     }
 }
 
+/// A heading in the outline. The current one is set in semibold ink on a light pill, marked
+/// with a lime dot outlined in ink.
 private final class HeadingCell: NSTableCellView {
     static let identifier = NSUserInterfaceItemIdentifier("HeadingCell")
 
     private let label = NSTextField(labelWithString: "")
+    private let dot = NSView()
     private var leading: NSLayoutConstraint!
+    private var dotLeading: NSLayoutConstraint!
+    private var isCurrent = false
 
     init() {
         super.init(frame: .zero)
         identifier = Self.identifier
+        wantsLayer = true
+        layer?.cornerRadius = 6
         label.lineBreakMode = .byTruncatingTail
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
+        dot.wantsLayer = true
+        dot.layer?.cornerRadius = 4
+        dot.layer?.borderWidth = 1.5
+        dot.setAccessibilityElement(false)
+        for view in [dot, label] {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(view)
+        }
         textField = label
-        leading = label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4)
+        leading = label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 18)
+        dotLeading = dot.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6)
         NSLayoutConstraint.activate([
             leading,
-            label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -4),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -6),
             label.centerYAnchor.constraint(equalTo: centerYAnchor),
+            dotLeading,
+            dot.centerYAnchor.constraint(equalTo: centerYAnchor),
+            dot.widthAnchor.constraint(equalToConstant: 8),
+            dot.heightAnchor.constraint(equalToConstant: 8),
         ])
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     func show(_ heading: Heading, indent: Int, isCurrent: Bool) {
+        self.isCurrent = isCurrent
         label.stringValue = heading.title
-        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: isCurrent ? .semibold : .regular)
-        label.textColor = isCurrent ? .controlAccentColor : .labelColor
-        leading.constant = 4 + CGFloat(min(indent, 3)) * 12
+        let isTop = indent == 0
+        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: isCurrent || isTop ? .semibold : .regular)
+        label.textColor = isCurrent ? Palette.inkText : .labelColor
+        let x = 18 + CGFloat(min(indent, 3)) * 12
+        leading.constant = x
+        dotLeading.constant = x - 12
+        dot.isHidden = !isCurrent
         toolTip = heading.title
         setAccessibilityLabel(isCurrent ? "\(heading.title), current section" : heading.title)
+        updateColors()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateColors()
+    }
+
+    private func updateColors() {
+        layer?.backgroundColor = isCurrent ? resolvedCGColor(Palette.controlFill) : NSColor.clear.cgColor
+        layer?.borderWidth = isCurrent ? 1 : 0
+        layer?.borderColor = resolvedCGColor(Palette.hairline)
+        dot.layer?.backgroundColor = resolvedCGColor(Palette.lime)
+        dot.layer?.borderColor = resolvedCGColor(Palette.ink)
     }
 }
