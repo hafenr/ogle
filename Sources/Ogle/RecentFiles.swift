@@ -17,7 +17,7 @@ final class RecentFiles {
         dates = UserDefaults.standard.dictionary(forKey: Self.datesKey) as? [String: Date] ?? [:]
     }
 
-    /// When the file was last opened in mdpeek (unknown for entries recorded by older versions).
+    /// When the file was last opened in Ogle (unknown for entries recorded by older versions).
     func lastOpened(_ url: URL) -> Date? {
         dates[url.path]
     }

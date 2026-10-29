@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>mdpeek</string>
+	<string>Ogle</string>
 	<key>CFBundleDisplayName</key>
-	<string>mdpeek</string>
+	<string>Ogle</string>
 	<key>CFBundleIdentifier</key>
-	<string>dev.mdpeek</string>
+	<string>dev.ogle</string>
 	<key>CFBundleExecutable</key>
-	<string>mdpeek</string>
+	<string>Ogle</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>

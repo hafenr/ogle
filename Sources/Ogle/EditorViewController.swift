@@ -106,16 +106,16 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
         let shell = String(cString: getpwuid(getuid())!.pointee.pw_shell)
         let environment = Terminal.getEnvironmentVariables() + [
             "SHELL=\(shell)",
-            "MDPEEK_NVIM=\(resources.appending(path: "neovim/bin/nvim").path)",
-            "MDPEEK_LUA=\(resources.appending(path: "mdpeek.lua").path)",
-            "MDPEEK_SOCKET=\(connection.path)",
-            "MDPEEK_FILE=\(url.path)",
-        ] + (line.map { ["MDPEEK_LINE=\($0)"] } ?? [])
+            "OGLE_NVIM=\(resources.appending(path: "neovim/bin/nvim").path)",
+            "OGLE_LUA=\(resources.appending(path: "ogle.lua").path)",
+            "OGLE_SOCKET=\(connection.path)",
+            "OGLE_FILE=\(url.path)",
+        ] + (line.map { ["OGLE_LINE=\($0)"] } ?? [])
         // Through an interactive login shell, as in a terminal, so that Neovim and its plugins
         // find the user's tools on the PATH.
         terminal.startProcess(
             executable: shell,
-            args: ["-l", "-i", "-c", #"exec "$MDPEEK_NVIM" --cmd 'lua dofile(vim.env.MDPEEK_LUA)' -- "$MDPEEK_FILE""#],
+            args: ["-l", "-i", "-c", #"exec "$OGLE_NVIM" --cmd 'lua dofile(vim.env.OGLE_LUA)' -- "$OGLE_FILE""#],
             environment: environment,
             currentDirectory: url.deletingLastPathComponent().path)
     }

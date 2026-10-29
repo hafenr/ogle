@@ -1,6 +1,6 @@
 import Foundation
 
-/// The socket over which the editor's Neovim talks to mdpeek, through mdpeek.lua: JSON
+/// The socket over which the editor's Neovim talks to Ogle, through ogle.lua: JSON
 /// objects, one per line. Neovim connects to it once, while it starts.
 @MainActor
 final class EditorConnection {
@@ -56,7 +56,7 @@ final class EditorConnection {
     private var pending = Data()
 
     init() throws {
-        path = (NSTemporaryDirectory() as NSString).appendingPathComponent("mdpeek-\(getpid()).sock")
+        path = (NSTemporaryDirectory() as NSString).appendingPathComponent("ogle-\(getpid()).sock")
         var address = sockaddr_un()
         address.sun_family = sa_family_t(AF_UNIX)
         let pathBytes = Array(path.utf8)

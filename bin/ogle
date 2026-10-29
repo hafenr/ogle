@@ -1,0 +1,3 @@
+#!/bin/bash
+# Opens the given Markdown files in Ogle.
+exec open -b dev.ogle "$@"

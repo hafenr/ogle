@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds build/mdpeek.app. Requires the Swift toolchain, npm and curl.
+# Builds build/Ogle.app. Requires the Swift toolchain, npm and curl.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -21,13 +21,13 @@ fi
 npm ci --no-audit --no-fund --loglevel=error
 swift build -c release
 
-app=build/mdpeek.app
+app=build/Ogle.app
 web="$app/Contents/Resources/web"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$web/vendor"
-cp "$(swift build -c release --show-bin-path)/mdpeek" "$app/Contents/MacOS/"
+cp "$(swift build -c release --show-bin-path)/Ogle" "$app/Contents/MacOS/"
 cp Resources/Info.plist "$app/Contents/"
-cp Resources/AppIcon.icns Resources/mdpeek.lua "$app/Contents/Resources/"
+cp Resources/AppIcon.icns Resources/ogle.lua "$app/Contents/Resources/"
 mkdir -p "$app/Contents/Resources/neovim/share"
 cp -R "$nvim/bin" "$nvim/lib" "$app/Contents/Resources/neovim/"
 cp -R "$nvim/share/nvim" "$app/Contents/Resources/neovim/share/"

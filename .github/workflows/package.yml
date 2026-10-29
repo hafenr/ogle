@@ -1,7 +1,7 @@
 name: Package
 
-# Pushing a tag like v1.2.0 publishes a GitHub release with mdpeek.zip.
-# Running the workflow manually only uploads mdpeek.zip as a workflow artifact.
+# Pushing a tag like v1.2.0 publishes a GitHub release with Ogle.zip.
+# Running the workflow manually only uploads Ogle.zip as a workflow artifact.
 on:
   push:
     tags: ["v*"]
@@ -24,15 +24,15 @@ jobs:
         run: ./build.sh
 
       - name: Package
-        run: ditto -c -k --keepParent build/mdpeek.app mdpeek.zip
+        run: ditto -c -k --keepParent build/Ogle.app Ogle.zip
 
       - uses: actions/upload-artifact@v7
         with:
-          name: mdpeek
-          path: mdpeek.zip
+          name: Ogle
+          path: Ogle.zip
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" mdpeek.zip --title "mdpeek $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" Ogle.zip --title "Ogle $GITHUB_REF_NAME" --generate-notes

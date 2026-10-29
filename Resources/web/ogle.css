@@ -289,11 +289,11 @@ body {
 
 /* Blocks a reload added or changed: tinted lime, fading out. The tint is an overlay, so the
    blocks' own backgrounds and layout stay as they are. */
-.markdown-body > .mdpeek-changed {
+.markdown-body > .ogle-changed {
   position: relative;
 }
 
-.markdown-body > .mdpeek-changed::after {
+.markdown-body > .ogle-changed::after {
   position: absolute;
   inset: -6px -12px;
   border-radius: 6px;
@@ -301,17 +301,17 @@ body {
   mix-blend-mode: multiply;
   pointer-events: none;
   content: "";
-  animation: mdpeek-changed 2s ease-in forwards;
+  animation: ogle-changed 2s ease-in forwards;
 }
 
-@keyframes mdpeek-changed {
+@keyframes ogle-changed {
   to {
     opacity: 0;
   }
 }
 
 @media (prefers-color-scheme: dark) {
-  .markdown-body > .mdpeek-changed::after {
+  .markdown-body > .ogle-changed::after {
     background: rgb(198 240 90 / 0.2);
     mix-blend-mode: normal;
   }
@@ -695,12 +695,12 @@ body.dragging #welcome .drop-zone {
 }
 
 /* The block holding the editor's cursor: a lime bar in the page's left margin, level with the
-   block (mdpeek.js sets where the margin is relative to the block). */
-.markdown-body .mdpeek-cursor {
+   block (ogle.js sets where the margin is relative to the block). */
+.markdown-body .ogle-cursor {
   position: relative;
 }
 
-.markdown-body .mdpeek-cursor::before {
+.markdown-body .ogle-cursor::before {
   position: absolute;
   top: 0;
   bottom: 0;

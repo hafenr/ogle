@@ -64,7 +64,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             backing: .buffered, defer: false)
         window.contentViewController = split
         window.setContentSize(NSSize(width: 1100, height: 800))
-        window.title = "mdpeek"
+        window.title = "Ogle"
         window.initialFirstResponder = preview.focusView
         window.center()
         window.setFrameAutosaveName("MainWindow")
@@ -403,7 +403,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
-    /// Opens the file in the app the system uses for it, or, if that is mdpeek, in the next
+    /// Opens the file in the app the system uses for it, or, if that is Ogle, in the next
     /// app that can edit it.
     @objc func openInEditor(_ sender: Any?) {
         guard let url = preview.documentURL else { return }

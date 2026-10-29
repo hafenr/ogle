@@ -1,6 +1,6 @@
 "use strict";
 
-window.mdpeek = (() => {
+window.ogle = (() => {
   const content = document.getElementById("content");
   const darkMode = matchMedia("(prefers-color-scheme: dark)");
 
@@ -26,7 +26,7 @@ window.mdpeek = (() => {
     `<button type="button" class="md-button" data-action="${action}" aria-label="${label}" title="${label}">${icon}${text ? `<span>${text}</span>` : ""}</button>`;
 
   // Messages to the app (outline, current section, clipboard, open requests).
-  const native = (message) => window.webkit?.messageHandlers?.mdpeek?.postMessage(message);
+  const native = (message) => window.webkit?.messageHandlers?.ogle?.postMessage(message);
 
   // Rendered diagrams by theme, occurrence and source, so unchanged diagrams are reused
   // as-is on reload and keep the layout stable.
@@ -370,10 +370,10 @@ window.mdpeek = (() => {
   }
 
   function tintChanged(block) {
-    block.classList.remove("mdpeek-changed");
+    block.classList.remove("ogle-changed");
     void block.offsetWidth; // Restarts the animation.
-    block.classList.add("mdpeek-changed");
-    block.addEventListener("animationend", () => block.classList.remove("mdpeek-changed"), { once: true });
+    block.classList.add("ogle-changed");
+    block.addEventListener("animationend", () => block.classList.remove("ogle-changed"), { once: true });
   }
 
   // MARK: Find
@@ -488,7 +488,7 @@ window.mdpeek = (() => {
   }
 
   function copy(text, kind = "text") {
-    if (window.webkit?.messageHandlers?.mdpeek) native({ type: "copy", kind, text });
+    if (window.webkit?.messageHandlers?.ogle) native({ type: "copy", kind, text });
     else navigator.clipboard?.writeText(text);
   }
 
@@ -892,9 +892,9 @@ window.mdpeek = (() => {
         if (cursorLine <= end) block = element;
       }
     }
-    for (const element of content.querySelectorAll(".mdpeek-cursor")) {
+    for (const element of content.querySelectorAll(".ogle-cursor")) {
       if (element === block) continue;
-      element.classList.remove("mdpeek-cursor");
+      element.classList.remove("ogle-cursor");
       element.style.removeProperty("--cursor-bar-left");
       if (!element.getAttribute("style")) element.removeAttribute("style");
     }
@@ -903,7 +903,7 @@ window.mdpeek = (() => {
     // lands on a list's bullets or numbers.
     const columnLeft = content.getBoundingClientRect().left + parseFloat(getComputedStyle(content).paddingLeft);
     block.style.setProperty("--cursor-bar-left", `${columnLeft - block.getBoundingClientRect().left - 16}px`);
-    block.classList.add("mdpeek-cursor");
+    block.classList.add("ogle-cursor");
   }
 
   // Scrolls so that Markdown source line `line` is at the top of the window.

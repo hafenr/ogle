@@ -1,8 +1,8 @@
--- Connects the Neovim of mdpeek's editor pane to mdpeek, over the socket in $MDPEEK_SOCKET.
+-- Connects the Neovim of Ogle's editor pane to Ogle, over the socket in $OGLE_SOCKET.
 -- Loaded with --cmd, before the user's configuration. Both sides send JSON objects, one per
 -- line: Neovim reports the first line shown in a window, the line of the cursor, whether any
--- buffer has unsaved changes and its background color, and mdpeek asks it to open the files it displays and to
--- scroll to the line at the top of the preview. $MDPEEK_LINE, if set, is the line to show
+-- buffer has unsaved changes and its background color, and Ogle asks it to open the files it displays and to
+-- scroll to the line at the top of the preview. $OGLE_LINE, if set, is the line to show
 -- the file at once Neovim's terminal UI has attached, which sets the size of its windows.
 
 local channel
@@ -20,7 +20,7 @@ local function scroll_state(window)
   return { event = "scroll", path = vim.api.nvim_buf_get_name(buffer), line = vim.fn.line("w0", window) }
 end
 
--- No reports while Neovim starts, or opens a file for mdpeek: either side's position may
+-- No reports while Neovim starts, or opens a file for Ogle: either side's position may
 -- win, which `position` settles.
 local quiet = true
 
@@ -84,7 +84,7 @@ local function handle(message)
   elseif message.command == "scroll" then
     scroll_to(message.path, message.line)
   else
-    error("mdpeek: unknown command " .. vim.inspect(message))
+    error("ogle: unknown command " .. vim.inspect(message))
   end
 end
 
@@ -98,7 +98,7 @@ local function receive(_, data)
   end
 end
 
-channel = vim.fn.sockconnect("pipe", vim.env.MDPEEK_SOCKET, { on_data = receive })
+channel = vim.fn.sockconnect("pipe", vim.env.OGLE_SOCKET, { on_data = receive })
 
 local modified = false
 local function report_modified()
@@ -143,13 +143,13 @@ local function report_background()
   send({ event = "background", color = vim.api.nvim_get_hl(0, { name = "Normal", link = false }).bg })
 end
 
-local group = vim.api.nvim_create_augroup("mdpeek", {})
+local group = vim.api.nvim_create_augroup("ogle", {})
 vim.api.nvim_create_autocmd("UIEnter", {
   group = group,
   once = true,
   callback = function()
     quiet = false
-    position(vim.api.nvim_buf_get_name(0), tonumber(vim.env.MDPEEK_LINE))
+    position(vim.api.nvim_buf_get_name(0), tonumber(vim.env.OGLE_LINE))
   end,
 })
 vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, { group = group, callback = report_background })

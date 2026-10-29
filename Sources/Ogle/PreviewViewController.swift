@@ -56,7 +56,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         didSet {
             guard isPageLoaded else { return }
             webView.callAsyncJavaScript(
-                "mdpeek.followSourceLine(line)", arguments: ["line": sourceLine.map(NSNumber.init) ?? NSNull()],
+                "ogle.followSourceLine(line)", arguments: ["line": sourceLine.map(NSNumber.init) ?? NSNull()],
                 in: nil, in: .page)
         }
     }
@@ -65,7 +65,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         didSet {
             guard isPageLoaded, cursorLine != oldValue else { return }
             webView.callAsyncJavaScript(
-                "mdpeek.setCursorLine(line)", arguments: ["line": cursorLine.map(NSNumber.init) ?? NSNull()],
+                "ogle.setCursorLine(line)", arguments: ["line": cursorLine.map(NSNumber.init) ?? NSNull()],
                 in: nil, in: .page)
         }
     }
@@ -74,7 +74,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         didSet {
             guard isPageLoaded, showsUnsavedNotice != oldValue else { return }
             webView.callAsyncJavaScript(
-                "mdpeek.showUnsavedNotice(shown)", arguments: ["shown": showsUnsavedNotice], in: nil, in: .page)
+                "ogle.showUnsavedNotice(shown)", arguments: ["shown": showsUnsavedNotice], in: nil, in: .page)
         }
     }
     var zoom: CGFloat {
@@ -89,7 +89,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
     override func loadView() {
         let configuration = WKWebViewConfiguration()
-        configuration.userContentController.add(WeakScriptMessageHandler(self), name: "mdpeek")
+        configuration.userContentController.add(WeakScriptMessageHandler(self), name: "ogle")
         webView = DropTargetWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self
         webView.onDropMarkdown = { [weak self] url in self?.onOpenMarkdown?(url) }
@@ -147,7 +147,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     private func render(preserveScroll: Bool) {
         guard isPageLoaded, let document else { return }
         webView.callAsyncJavaScript(
-            "await mdpeek.render(html, baseURL, preserveScroll)",
+            "await ogle.render(html, baseURL, preserveScroll)",
             arguments: [
                 "html": Markdown.html(from: document.data),
                 "baseURL": document.url.deletingLastPathComponent().absoluteString,
@@ -156,7 +156,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             in: nil, in: .page
         ) { result in
             if case .failure(let error) = result {
-                NSLog("mdpeek: rendering %@ failed: %@", document.url.path, String(describing: error))
+                NSLog("ogle: rendering %@ failed: %@", document.url.path, String(describing: error))
             }
         }
     }
@@ -164,25 +164,25 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     /// The source line at the top of the view, as the page computes it now.
     func sourceLineAtTop() async -> Int? {
         guard isPageLoaded, document != nil else { return nil }
-        let line = try? await webView.callAsyncJavaScript("return mdpeek.sourceLineAtTop()", contentWorld: .page)
+        let line = try? await webView.callAsyncJavaScript("return ogle.sourceLineAtTop()", contentWorld: .page)
         return (line as? NSNumber)?.intValue
     }
 
     private func sendRecentFiles() {
         guard isPageLoaded else { return }
         let files = recentFiles.map { ["path": $0.path, "name": $0.name, "folder": $0.folder, "when": $0.when] }
-        webView.callAsyncJavaScript("mdpeek.setRecentFiles(files)", arguments: ["files": files], in: nil, in: .page)
+        webView.callAsyncJavaScript("ogle.setRecentFiles(files)", arguments: ["files": files], in: nil, in: .page)
     }
 
     /// Focuses the search field of the start page's Open Quickly card.
     func focusOpenQuickly() {
         guard isPageLoaded, document == nil else { return }
         view.window?.makeFirstResponder(webView)
-        webView.callAsyncJavaScript("mdpeek.focusOpenQuickly()", in: nil, in: .page)
+        webView.callAsyncJavaScript("ogle.focusOpenQuickly()", in: nil, in: .page)
     }
 
     func scrollToHeading(_ id: String) {
-        webView.callAsyncJavaScript("mdpeek.scrollToHeading(id)", arguments: ["id": id], in: nil, in: .page)
+        webView.callAsyncJavaScript("ogle.scrollToHeading(id)", arguments: ["id": id], in: nil, in: .page)
     }
 
     // MARK: Find
@@ -208,7 +208,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         webViewBelowFindBar.isActive = false
         webViewTop.isActive = true
         if isPageLoaded {
-            webView.callAsyncJavaScript("mdpeek.clearFind()", in: nil, in: .page)
+            webView.callAsyncJavaScript("ogle.clearFind()", in: nil, in: .page)
         }
         view.window?.makeFirstResponder(webView)
         onFindBarChange?(false)
@@ -220,11 +220,11 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             showFindBar()
             return
         }
-        runFind("return mdpeek.findNext(backwards)", arguments: ["backwards": backwards])
+        runFind("return ogle.findNext(backwards)", arguments: ["backwards": backwards])
     }
 
     private func findChanged() {
-        runFind("return mdpeek.find(query, caseSensitive)", arguments: ["query": findBar.query, "caseSensitive": findBar.isCaseSensitive])
+        runFind("return ogle.find(query, caseSensitive)", arguments: ["query": findBar.query, "caseSensitive": findBar.isCaseSensitive])
     }
 
     private func runFind(_ script: String, arguments: [String: Any]) {
@@ -345,20 +345,20 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         isPageLoaded = true
         sendRecentFiles()
         if showsUnsavedNotice {
-            webView.callAsyncJavaScript("mdpeek.showUnsavedNotice(true)", in: nil, in: .page)
+            webView.callAsyncJavaScript("ogle.showUnsavedNotice(true)", in: nil, in: .page)
         }
         if let cursorLine {
-            webView.callAsyncJavaScript("mdpeek.setCursorLine(line)", arguments: ["line": cursorLine], in: nil, in: .page)
+            webView.callAsyncJavaScript("ogle.setCursorLine(line)", arguments: ["line": cursorLine], in: nil, in: .page)
         }
         if document == nil {
-            webView.callAsyncJavaScript("mdpeek.showWelcome()", in: nil, in: .page)
+            webView.callAsyncJavaScript("ogle.showWelcome()", in: nil, in: .page)
         } else {
             render(preserveScroll: false)
         }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        NSLog("mdpeek: loading %@ failed: %@", pageURL.path, String(describing: error))
+        NSLog("ogle: loading %@ failed: %@", pageURL.path, String(describing: error))
     }
 
     func webView(

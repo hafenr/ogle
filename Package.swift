@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "mdpeek",
+    name: "ogle",
     platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-cmark.git", from: "0.9.0"),
@@ -10,7 +10,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "mdpeek",
+            name: "Ogle",
             dependencies: [
                 .product(name: "cmark-gfm", package: "swift-cmark"),
                 .product(name: "cmark-gfm-extensions", package: "swift-cmark"),

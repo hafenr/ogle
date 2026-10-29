@@ -6,7 +6,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var windowController = MainWindowController()
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        migrateSettingsFromMdpeek()
         NSApp.mainMenu = makeMainMenu()
+    }
+
+    /// Brings over the recent files, window layout and settings of mdpeek, as Ogle was called
+    /// before, the first time Ogle runs.
+    private func migrateSettingsFromMdpeek() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: "migratedFromMdpeek") else { return }
+        defaults.set(true, forKey: "migratedFromMdpeek")
+        guard let old = defaults.persistentDomain(forName: "dev.mdpeek") else { return }
+        for (key, value) in old where defaults.object(forKey: key) == nil {
+            defaults.set(value, forKey: key)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -36,15 +49,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makeMainMenu() -> NSMenu {
         let mainMenu = NSMenu()
 
-        let appMenu = submenu(of: mainMenu, title: "mdpeek")
-        appMenu.addItem(withTitle: "About mdpeek", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let appMenu = submenu(of: mainMenu, title: "Ogle")
+        appMenu.addItem(withTitle: "About Ogle", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Hide mdpeek", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Hide Ogle", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(withTitle: "Hide Others", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
             .keyEquivalentModifierMask = [.command, .option]
         appMenu.addItem(withTitle: "Show All", action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit mdpeek", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Ogle", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         let fileMenu = submenu(of: mainMenu, title: "File")
         fileMenu.addItem(withTitle: "Open…", action: #selector(openDocument(_:)), keyEquivalent: "o")
