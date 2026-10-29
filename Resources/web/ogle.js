@@ -904,33 +904,44 @@ window.ogle = (() => {
   // The source line of the editor's cursor: the innermost block holding it is marked. A block
   // holds the lines of its source, a diagram those of its fenced block.
   let cursorLine = null;
+  let cursorBlock = null;
+  // The mark is an element of its own rather than part of the block, which code blocks and
+  // tables would clip, since it lies outside them.
+  const cursorBar = document.createElement("div");
+  cursorBar.id = "cursor-bar";
+  cursorBar.hidden = true;
+  document.body.append(cursorBar);
+
   function setCursorLine(line) {
     cursorLine = line;
     markCursorBlock();
   }
 
   function markCursorBlock() {
-    let block = null;
+    cursorBlock = null;
     if (cursorLine) {
       for (const element of content.querySelectorAll("[data-sourcepos]")) {
         const [start, end] = element.dataset.sourcepos.match(/^(\d+):\d+-(\d+)/).slice(1).map(Number);
         if (start > cursorLine) break;
-        if (cursorLine <= end) block = element;
+        if (cursorLine <= end) cursorBlock = element;
       }
     }
-    for (const element of content.querySelectorAll(".ogle-cursor")) {
-      if (element === block) continue;
-      element.classList.remove("ogle-cursor");
-      element.style.removeProperty("--cursor-bar-left");
-      if (!element.getAttribute("style")) element.removeAttribute("style");
-    }
-    if (!block) return;
-    // The bar runs in the page's left margin, whatever the block's indentation, so it never
-    // lands on a list's bullets or numbers.
-    const columnLeft = content.getBoundingClientRect().left + parseFloat(getComputedStyle(content).paddingLeft);
-    block.style.setProperty("--cursor-bar-left", `${columnLeft - block.getBoundingClientRect().left - 16}px`);
-    block.classList.add("ogle-cursor");
+    placeCursorBar();
   }
+
+  // The bar runs in the page's left margin, whatever the block's indentation, so it never
+  // lands on a list's bullets or numbers. It follows the block as the layout changes.
+  function placeCursorBar() {
+    cursorBar.hidden = !cursorBlock?.isConnected;
+    if (cursorBar.hidden) return;
+    const rect = cursorBlock.getBoundingClientRect();
+    const columnLeft = content.getBoundingClientRect().left + parseFloat(getComputedStyle(content).paddingLeft);
+    cursorBar.style.left = `${columnLeft - 16 + scrollX}px`;
+    cursorBar.style.top = `${rect.top + scrollY}px`;
+    cursorBar.style.height = `${rect.height}px`;
+  }
+  addEventListener("resize", placeCursorBar);
+  new ResizeObserver(placeCursorBar).observe(content);
 
   // Scrolls so that Markdown source line `line` is at the top of the window.
   function scrollToSourceLine(line) {

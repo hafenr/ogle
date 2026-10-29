@@ -695,19 +695,11 @@ body.dragging #welcome .drop-zone {
 }
 
 /* The block holding the editor's cursor: a lime bar in the page's left margin, level with the
-   block (ogle.js sets where the margin is relative to the block). */
-.markdown-body .ogle-cursor {
-  position: relative;
-}
-
-.markdown-body .ogle-cursor::before {
+   block (ogle.js places it). */
+#cursor-bar {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--cursor-bar-left, -16px);
   width: 4px;
   border-radius: 2px;
   background: var(--lime);
   pointer-events: none;
-  content: "";
 }
