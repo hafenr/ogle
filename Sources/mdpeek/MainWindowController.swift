@@ -5,7 +5,7 @@ private extension NSToolbarItem.Identifier {
     static let find = Self("find")
     static let zoom = Self("zoom")
     static let editor = Self("editor")
-    static let syncScrolling = Self("syncScrolling")
+    static let link = Self("link")
     static let openInEditor = Self("openInEditor")
     static let share = Self("share")
 }
@@ -23,13 +23,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// The width of the editor when last shown.
     private var editorWidth: CGFloat?
     private let preview = PreviewViewController()
-    /// Whether scrolling the editor or the preview scrolls the other.
-    private var syncScrolling = true
+    /// Whether the editor and the preview scroll together and share a zoom level. While
+    /// unlinked, zooming applies to whichever has focus.
+    private var linked = true
     private var editorTopLine: (url: URL, line: Int)?
     /// The source line at the top of the preview, once scrolled away from the top.
     private var previewTopLine: Int?
     private var findItem: NSSearchToolbarItem?
-    private var syncScrollingItem: NSToolbarItem?
+    private var linkItem: NSToolbarItem?
     private let zoomControl = NSSegmentedControl(
         labels: ["−", "100%", "+"], trackingMode: .momentary, target: nil, action: nil)
 
@@ -48,7 +49,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         // Nothing to list yet on first launch: start with the start page alone.
         if recents.urls.isEmpty { sidebarItem.isCollapsed = true }
 
-        let window = NSWindow(
+        let window = MainWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1100, height: 800),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
@@ -60,6 +61,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         window.setFrameAutosaveName("MainWindow")
         super.init(window: window)
         window.delegate = self
+        window.onFirstResponderChange = { [weak self] in self?.updateZoomLabel() }
         // Loading the split view restores the state it saved of every item; the editor starts
         // closed regardless.
         editorItem.isCollapsed = true
@@ -82,8 +84,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         preview.onOutlineChange = { [weak self] headings in self?.sidebar.setHeadings(headings) }
         preview.onSectionChange = { [weak self] id in self?.sidebar.setCurrentHeading(id) }
         preview.onZoomChange = { [weak self] zoom in
-            self?.updateZoomLabel(zoom)
-            self?.editor.zoom = zoom
+            guard let self else { return }
+            if linked { editor.zoom = zoom }
+            updateZoomLabel()
         }
         editor.onScroll = { [weak self] url, line in
             self?.editorTopLine = (url, line)
@@ -133,7 +136,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             splitView.setPosition(start + (editorWidth ?? (splitView.bounds.maxX - start) / 2), ofDividerAt: 1)
             if let url = preview.documentURL {
                 // Where the preview is, if scrolled; otherwise where Neovim shows the file.
-                let line = syncScrolling ? previewTopLine : nil
+                let line = linked ? previewTopLine : nil
                 if let line { editorTopLine = (url, line) }
                 editor.open(url, atLine: line)
             }
@@ -141,13 +144,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             editorWidth = editor.view.frame.width
             editorItem.isCollapsed = true
         }
-        syncScrollingItem?.isHidden = !visible
+        linkItem?.isHidden = !visible
         window?.makeFirstResponder(visible ? editor.focusView : preview.focusView)
         updateSourceLine()
     }
 
     private func updateSourceLine() {
-        guard syncScrolling, !editorItem.isCollapsed, let editorTopLine, let url = preview.documentURL,
+        guard linked, !editorItem.isCollapsed, let editorTopLine, let url = preview.documentURL,
             editorTopLine.url.resolvingSymlinksInPath() == url.resolvingSymlinksInPath()
         else {
             preview.sourceLine = nil
@@ -159,7 +162,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     private func previewScrolled(to line: Int) {
         previewTopLine = line
-        guard syncScrolling, !editorItem.isCollapsed, let url = preview.documentURL else { return }
+        guard linked, !editorItem.isCollapsed, let url = preview.documentURL else { return }
         editorTopLine = (url, line)
         editor.scroll(url, toLine: line)
     }
@@ -190,31 +193,52 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         setEditorVisible(editorItem.isCollapsed)
     }
 
-    @objc func toggleSyncScrolling(_ sender: Any?) {
-        syncScrolling.toggle()
-        updateSyncScrollingItem()
+    @objc func toggleLinked(_ sender: Any?) {
+        linked.toggle()
+        // Linking again brings the editor to the preview's zoom level.
+        if linked { editor.zoom = preview.zoom }
+        updateLinkItem()
+        updateZoomLabel()
         updateSourceLine()
     }
 
-    private func updateSyncScrollingItem() {
-        let title = syncScrolling ? "Scroll the Editor and Preview Separately" : "Scroll the Editor and Preview Together"
-        syncScrollingItem?.image = NSImage(systemSymbolName: syncScrolling ? "lock" : "lock.open", accessibilityDescription: title)
-        syncScrollingItem?.toolTip = title
+    private func updateLinkItem() {
+        let title = linked ? "Scroll and Zoom the Editor and Preview Separately" : "Scroll and Zoom the Editor and Preview Together"
+        linkItem?.image = NSImage(systemSymbolName: linked ? "lock" : "lock.open", accessibilityDescription: title)
+        linkItem?.toolTip = title
     }
 
-    @objc func zoomIn(_ sender: Any?) { preview.zoomIn() }
-    @objc func zoomOut(_ sender: Any?) { preview.zoomOut() }
-    @objc func actualSize(_ sender: Any?) { preview.resetZoom() }
+    @objc func zoomIn(_ sender: Any?) { changeZoom(.larger) }
+    @objc func zoomOut(_ sender: Any?) { changeZoom(.smaller) }
+    @objc func actualSize(_ sender: Any?) { changeZoom(.actualSize) }
 
     @objc private func zoomControlClicked(_ sender: NSSegmentedControl) {
         switch sender.selectedSegment {
-        case 0: preview.zoomOut()
-        case 2: preview.zoomIn()
-        default: preview.resetZoom()
+        case 0: changeZoom(.smaller)
+        case 2: changeZoom(.larger)
+        default: changeZoom(.actualSize)
         }
     }
 
-    private func updateZoomLabel(_ zoom: CGFloat) {
+    /// Whether zooming applies to the editor alone: while unlinked, with the editor focused.
+    private var zoomsEditor: Bool {
+        guard !linked, !editorItem.isCollapsed, let responder = window?.firstResponder as? NSView else { return false }
+        return responder.isDescendant(of: editor.view)
+    }
+
+    private func changeZoom(_ step: Zoom.Step) {
+        if zoomsEditor {
+            editor.zoom = step.apply(to: editor.zoom)
+            updateZoomLabel()
+        } else {
+            // Reports the change, which the editor follows while linked.
+            preview.changeZoom(step)
+        }
+    }
+
+    /// Shows the zoom level of what zooming applies to.
+    private func updateZoomLabel() {
+        let zoom = zoomsEditor ? editor.zoom : preview.zoom
         zoomControl.setLabel("\(Int((zoom * 100).rounded()))%", forSegment: 1)
     }
 
@@ -276,8 +300,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         case #selector(printDocument(_:)), #selector(exportPDF(_:)), #selector(openInEditor(_:)),
             #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)), #selector(toggleEditor(_:)):
             return preview.documentURL != nil
-        case #selector(toggleSyncScrolling(_:)):
-            menuItem.state = syncScrolling ? .on : .off
+        case #selector(toggleLinked(_:)):
+            menuItem.state = linked ? .on : .off
             return !editorItem.isCollapsed
         default:
             return true
@@ -293,7 +317,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     // MARK: NSToolbarDelegate
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .zoom, .syncScrolling, .editor, .openInEditor, .share]
+        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .zoom, .link, .editor, .openInEditor, .share]
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
@@ -329,15 +353,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             item.target = self
             item.action = #selector(toggleEditor(_:))
             return item
-        case .syncScrolling:
+        case .link:
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Sync Scrolling"
+            item.label = "Link Editor"
             item.isBordered = true
             item.isHidden = editorItem.isCollapsed
             item.target = self
-            item.action = #selector(toggleSyncScrolling(_:))
-            syncScrollingItem = item
-            updateSyncScrollingItem()
+            item.action = #selector(toggleLinked(_:))
+            linkItem = item
+            updateLinkItem()
             return item
         case .openInEditor:
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
@@ -356,5 +380,16 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         default:
             return NSToolbarItem(itemIdentifier: itemIdentifier)
         }
+    }
+}
+
+/// Reports changes of the first responder, which decide whether zooming applies to the editor.
+private final class MainWindow: NSWindow {
+    var onFirstResponderChange: (() -> Void)?
+
+    override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+        let changed = super.makeFirstResponder(responder)
+        if changed { onFirstResponderChange?() }
+        return changed
     }
 }

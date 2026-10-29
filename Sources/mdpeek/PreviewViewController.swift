@@ -10,8 +10,6 @@ struct Heading: Equatable {
 
 @MainActor
 final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
-    private static let zoomLevels: [CGFloat] = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3]
-
     private let pageURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")!
     private var webView: DropTargetWebView!
     private let statusBar = StatusBarView()
@@ -133,22 +131,11 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
     // MARK: Zoom
 
-    func zoomIn() {
-        setZoom(Self.zoomLevels.first { $0 > webView.pageZoom + 0.001 } ?? webView.pageZoom)
-    }
-
-    func zoomOut() {
-        setZoom(Self.zoomLevels.last { $0 < webView.pageZoom - 0.001 } ?? webView.pageZoom)
-    }
-
-    func resetZoom() {
-        webView.magnification = 1
-        setZoom(1)
-    }
-
-    private func setZoom(_ zoom: CGFloat) {
-        webView.pageZoom = zoom
-        onZoomChange?(zoom)
+    func changeZoom(_ step: Zoom.Step) {
+        // Actual size also undoes pinch magnification.
+        if step == .actualSize { webView.magnification = 1 }
+        webView.pageZoom = step.apply(to: webView.pageZoom)
+        onZoomChange?(webView.pageZoom)
     }
 
     // MARK: Printing

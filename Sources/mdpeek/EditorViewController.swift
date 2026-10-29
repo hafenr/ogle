@@ -14,7 +14,8 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
     var onQuit: (() -> Void)?
 
     var focusView: NSView? { session?.terminal }
-    /// The text size relative to the default, which follows the preview's zoom.
+    /// The text size relative to the default; it follows the preview's zoom while the two are
+    /// linked.
     var zoom: CGFloat = 1 {
         didSet { session?.terminal.font = font }
     }
