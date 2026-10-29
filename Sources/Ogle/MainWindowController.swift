@@ -297,7 +297,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             Task {
                 // Asks the page: previewTopLine only changes as the preview is scrolled, so it
                 // misses reloads that moved the text since. No line yet: the preview is at the top.
-                let line = await self.preview.sourceLineAtTop() ?? self.previewTopLine ?? 1
+                let line: Int
+                do {
+                    line = try await self.preview.sourceLineAtTop() ?? self.previewTopLine ?? 1
+                } catch {
+                    self.presentError(error)
+                    return
+                }
                 guard self.linked, self.preview.documentURL == url else { return }
                 self.previewTopLine = line
                 self.editorTopLine = (url, line)

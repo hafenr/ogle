@@ -162,9 +162,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     }
 
     /// The source line at the top of the view, as the page computes it now.
-    func sourceLineAtTop() async -> Int? {
+    func sourceLineAtTop() async throws -> Int? {
         guard isPageLoaded, document != nil else { return nil }
-        let line = try? await webView.callAsyncJavaScript("return ogle.sourceLineAtTop()", contentWorld: .page)
+        let line = try await webView.callAsyncJavaScript("return ogle.sourceLineAtTop()", contentWorld: .page)
         return (line as? NSNumber)?.intValue
     }
 
@@ -230,8 +230,13 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     private func runFind(_ script: String, arguments: [String: Any]) {
         guard isPageLoaded, document != nil else { return }
         webView.callAsyncJavaScript(script, arguments: arguments, in: nil, in: .page) { [weak self] result in
-            guard case .success(let value) = result, let value = value as? [String: Any] else { return }
-            MainActor.assumeIsolated { self?.showFindResult(value) }
+            switch result {
+            case .success(let value):
+                guard let value = value as? [String: Any] else { return }
+                MainActor.assumeIsolated { self?.showFindResult(value) }
+            case .failure(let error):
+                NSLog("ogle: finding failed: %@", String(describing: error))
+            }
         }
     }
 
