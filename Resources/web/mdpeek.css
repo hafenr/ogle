@@ -264,6 +264,57 @@ body {
 #toast.visible {
   opacity: 1;
   transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+#toast.has-action {
+  gap: 10px;
+  padding: 4px 4px 4px 12px;
+}
+
+#toast button {
+  height: 22px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--lime);
+  font: 600 11px -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#toast button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+/* Blocks a reload added or changed: tinted lime, fading out. The tint is an overlay, so the
+   blocks' own backgrounds and layout stay as they are. */
+.markdown-body > .mdpeek-changed {
+  position: relative;
+}
+
+.markdown-body > .mdpeek-changed::after {
+  position: absolute;
+  inset: -6px -12px;
+  border-radius: 6px;
+  background: rgb(198 240 90 / 0.35);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  content: "";
+  animation: mdpeek-changed 2s ease-in forwards;
+}
+
+@keyframes mdpeek-changed {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .markdown-body > .mdpeek-changed::after {
+    background: rgb(198 240 90 / 0.2);
+    mix-blend-mode: normal;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

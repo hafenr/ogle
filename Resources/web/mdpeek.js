@@ -106,6 +106,7 @@ window.mdpeek = (() => {
     welcome.hidden = true;
     content.hidden = false;
     const anchor = preserveScroll ? scrollAnchor() : null;
+    const before = preserveScroll ? [...content.children].map(signature) : null;
     markOwnScroll();
     content.replaceChildren(...container.childNodes);
     if (sourceLine) scrollToSourceLine(sourceLine);
@@ -116,7 +117,7 @@ window.mdpeek = (() => {
     postOutline();
     updateSection(true);
     refreshFind();
-    if (preserveScroll && !quiet) showToast("Reloaded — file changed on disk");
+    if (preserveScroll && !quiet) showChanges(before);
   }
 
   // The start page, shown while no file is open.
@@ -185,19 +186,88 @@ window.mdpeek = (() => {
 
   // MARK: Notices
 
+  // A short notice at the top of the window, with an optional button ({ label, run }). It
+  // stays while the pointer is over it.
   let toastTimer;
-  function showToast(text) {
+  function showToast(text, action) {
     let toast = document.getElementById("toast");
     if (!toast) {
       toast = document.createElement("div");
       toast.id = "toast";
       toast.setAttribute("role", "status");
+      toast.addEventListener("mouseenter", () => clearTimeout(toastTimer));
+      toast.addEventListener("mouseleave", () => hideToastLater(1500));
       document.body.append(toast);
     }
-    toast.textContent = text;
+    const label = document.createElement("span");
+    label.textContent = text;
+    toast.replaceChildren(label);
+    if (action) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = action.label;
+      button.addEventListener("click", () => {
+        action.run();
+        toast.classList.remove("visible");
+      });
+      toast.append(button);
+    }
+    toast.classList.toggle("has-action", Boolean(action));
     toast.classList.add("visible");
+    hideToastLater(action ? 4000 : 1800);
+  }
+
+  function hideToastLater(delay) {
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("visible"), 1800);
+    toastTimer = setTimeout(() => document.getElementById("toast")?.classList.remove("visible"), delay);
+  }
+
+  // After a reload, tints the top-level blocks that are new or changed (fading out) and says
+  // how many there are, with a button that scrolls to the first.
+  function showChanges(before) {
+    const blocks = [...content.children];
+    const { indexes, removed } = changedIndexes(before, blocks.map(signature));
+    const changed = indexes.map((index) => blocks[index]);
+    changed.forEach(tintChanged);
+    const count = (n, what) => `${n} ${n === 1 ? "block" : "blocks"} ${what}`;
+    if (changed.length) {
+      showToast(`Reloaded · ${count(changed.length, "changed")}`, {
+        label: "Show",
+        run: () => {
+          const block = changed.find((element) => element.isConnected);
+          if (!block) return;
+          window.scrollTo({ top: block.getBoundingClientRect().top + scrollY - 24, behavior: "smooth" });
+          tintChanged(block);
+        },
+      });
+    } else {
+      showToast(removed ? `Reloaded · ${count(removed, "removed")}` : "Reloaded");
+    }
+  }
+
+  // The indexes of the blocks in `after` that are new or changed since `before` (lists of
+  // block signatures), and how many blocks were removed.
+  function changedIndexes(before, after) {
+    const indexes = [];
+    let newIndex = 0;
+    let removed = 0;
+    for (const change of Diff.diffArrays(before, after)) {
+      if (change.added) {
+        for (let i = 0; i < change.count; i++) indexes.push(newIndex + i);
+      } else if (change.removed) {
+        removed += change.count;
+        continue;
+      }
+      newIndex += change.count;
+    }
+    return { indexes, removed: Math.max(removed - indexes.length, 0) };
+  }
+
+  function tintChanged(block) {
+    block.classList.remove("mdpeek-changed");
+    void block.offsetWidth; // Restarts the animation.
+    block.classList.add("mdpeek-changed");
+    block.addEventListener("animationend", () => block.classList.remove("mdpeek-changed"), { once: true });
   }
 
   // MARK: Find
