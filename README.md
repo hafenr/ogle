@@ -69,8 +69,8 @@ defaults delete dev.ogle    # recent files and window layout
 Releases are built, signed and notarized on a Mac with the Developer ID certificate, and published with the [GitHub CLI](https://cli.github.com). Once, save notary credentials with `xcrun notarytool store-credentials ogle-notary` and log in with `gh auth login`. Then, on an up-to-date `main` with everything committed:
 
 ```sh
-scripts/sign-and-release.sh          # shows the latest release and the next version
-scripts/sign-and-release.sh 0.3.3    # builds, signs, notarizes, then asks before tagging and publishing
+scripts/release.sh          # shows the latest release and the next version
+scripts/release.sh 0.3.3    # builds, signs, notarizes, then asks before tagging and publishing
 ```
 
 ## Usage

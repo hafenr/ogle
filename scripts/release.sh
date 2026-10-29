@@ -2,8 +2,8 @@
 # Releases Ogle: builds the app signed with the Developer ID, notarizes it, tags the version,
 # pushes main and the tag, and publishes a GitHub release with Ogle.zip.
 #
-#   scripts/sign-and-release.sh            prints the latest release and the usage
-#   scripts/sign-and-release.sh 0.3.2      releases v0.3.2 from main
+#   scripts/release.sh            prints the latest release and the usage
+#   scripts/release.sh 0.3.2      releases v0.3.2 from main
 #
 # Needs the Developer ID Application certificate in the keychain, notary credentials saved
 # as "ogle-notary" (xcrun notarytool store-credentials ogle-notary), and gh logged in.
@@ -22,7 +22,7 @@ if [[ $# -eq 0 ]]; then
     IFS=. read -r major minor patch <<<"${current#v}"
     echo "Next patch:     $major.$minor.$((patch + 1))"
   fi
-  echo "Usage: scripts/sign-and-release.sh <version>, e.g. scripts/sign-and-release.sh ${current:+$major.$minor.$((patch + 1))}"
+  echo "Usage: scripts/release.sh <version>, e.g. scripts/release.sh ${current:+$major.$minor.$((patch + 1))}"
   exit 0
 fi
 
