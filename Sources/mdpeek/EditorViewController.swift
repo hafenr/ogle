@@ -6,10 +6,16 @@ import SwiftTerm
 @MainActor
 final class EditorViewController: NSViewController, LocalProcessTerminalViewDelegate {
     private var session: (terminal: EditorTerminalView, connection: EditorConnection)?
-    private(set) var hasUnsavedChanges = false
+    private(set) var hasUnsavedChanges = false {
+        didSet {
+            if hasUnsavedChanges != oldValue { onUnsavedChangesChange?(hasUnsavedChanges) }
+        }
+    }
 
     /// Called with the first line Neovim shows of a file, whenever it changes.
     var onScroll: ((URL, Int) -> Void)?
+    /// Called when Neovim gets unsaved changes, and when it no longer has any.
+    var onUnsavedChangesChange: ((Bool) -> Void)?
     /// Called when Neovim quits normally.
     var onQuit: (() -> Void)?
 

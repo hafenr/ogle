@@ -454,3 +454,45 @@ body.dragging #welcome .drop-zone {
     background-color: rgb(198 240 90 / 0.3);
   }
 }
+
+/* "Showing last save" while the editor has unsaved changes. */
+#unsaved {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #e0e0e4;
+  border-radius: 999px;
+  color: #4a4a50;
+  background: #ffffff;
+  font: 11px -apple-system, BlinkMacSystemFont, sans-serif;
+  pointer-events: none;
+}
+
+#unsaved::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c26a00;
+  content: "";
+}
+
+#unsaved kbd {
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  #unsaved {
+    border-color: #3d444d;
+    color: #c9d1d9;
+    background: #161b22;
+  }
+
+  #unsaved::before {
+    background: #f0a33a;
+  }
+}

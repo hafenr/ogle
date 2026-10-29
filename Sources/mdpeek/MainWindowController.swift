@@ -92,6 +92,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             self?.updateSourceLine()
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
+        editor.onUnsavedChangesChange = { [weak self] _ in self?.updateEditedState() }
         preview.onScroll = { [weak self] line in self?.previewScrolled(to: line) }
         preview.onFindBarChange = { [weak self] shown in self?.findButton?.state = shown ? .on : .off }
     }
@@ -115,8 +116,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             return false
         }
         window?.title = url.lastPathComponent
-        window?.subtitle = (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
         window?.representedURL = url
+        updateEditedState()
         sidebar.select(url)
         previewTopLine = nil
         statusBar.isActive = true
@@ -126,6 +127,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
         updateSourceLine()
         return true
+    }
+
+    /// While Neovim has unsaved changes, marks the window as edited, adds "— Edited" to the
+    /// subtitle, and tells the preview it shows the last save.
+    private func updateEditedState() {
+        let edited = editor.hasUnsavedChanges
+        window?.isDocumentEdited = edited
+        if let url = preview.documentURL {
+            let folder = (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
+            window?.subtitle = edited ? "\(folder) — Edited" : folder
+        }
+        preview.showsUnsavedNotice = edited
     }
 
     private func setEditorVisible(_ visible: Bool) {

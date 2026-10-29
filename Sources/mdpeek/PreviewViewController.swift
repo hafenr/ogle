@@ -44,6 +44,14 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
                 in: nil, in: .page)
         }
     }
+    /// Whether to note that the preview shows the last save while the editor has unsaved changes.
+    var showsUnsavedNotice = false {
+        didSet {
+            guard isPageLoaded, showsUnsavedNotice != oldValue else { return }
+            webView.callAsyncJavaScript(
+                "mdpeek.showUnsavedNotice(shown)", arguments: ["shown": showsUnsavedNotice], in: nil, in: .page)
+        }
+    }
     var zoom: CGFloat {
         loadViewIfNeeded()
         return webView.pageZoom
@@ -291,6 +299,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard !isPageLoaded else { return }
         isPageLoaded = true
+        if showsUnsavedNotice {
+            webView.callAsyncJavaScript("mdpeek.showUnsavedNotice(true)", in: nil, in: .page)
+        }
         if document == nil {
             webView.callAsyncJavaScript("mdpeek.showWelcome()", in: nil, in: .page)
         } else {

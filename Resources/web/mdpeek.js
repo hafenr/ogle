@@ -222,6 +222,21 @@ window.mdpeek = (() => {
     toastTimer = setTimeout(() => document.getElementById("toast")?.classList.remove("visible"), delay);
   }
 
+  // A pill at the top right while the editor has unsaved changes, which the page does not show.
+  function showUnsavedNotice(shown) {
+    let notice = document.getElementById("unsaved");
+    if (!shown) {
+      notice?.remove();
+      return;
+    }
+    if (notice) return;
+    notice = document.createElement("div");
+    notice.id = "unsaved";
+    notice.setAttribute("role", "status");
+    notice.innerHTML = "Showing last save · <kbd>:w</kbd> to update";
+    document.body.append(notice);
+  }
+
   // After a reload, tints the top-level blocks that are new or changed (fading out) and says
   // how many there are, with a button that scrolls to the first.
   function showChanges(before) {
@@ -795,5 +810,5 @@ window.mdpeek = (() => {
     return Math.floor(line);
   }
 
-  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind };
+  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind, showUnsavedNotice };
 })();
