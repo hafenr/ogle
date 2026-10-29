@@ -87,7 +87,7 @@ git tag v0.2.0 && git push origin v0.2.0
 mdpeek README.md
 ```
 
-Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek from Finder's "Open With". Zoom with ⌘+ / ⌘- / ⌘0 or pinch. Links to other Markdown files open in mdpeek; other links open in the default app.
+Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek from Finder's "Open With". Zoom with ⌘+ / ⌘- / ⌘0 or pinch; pinching magnifies the preview only, and never changes the editor's text size, which follows ⌘+ / ⌘- / ⌘0 alone. Links to other Markdown files open in mdpeek; other links open in the default app.
 
 ## Layout
 
