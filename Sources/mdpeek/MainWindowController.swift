@@ -26,6 +26,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// Whether the editor and the preview scroll together and share a zoom level. While
     /// unlinked, zooming applies to whichever has focus.
     private var linked = true
+    private enum Pane { case editor, preview }
+    /// The pane the user last scrolled or zoomed while unlinked: linking again brings the other
+    /// one to it.
+    private var lastActivePane: Pane?
     private var editorTopLine: (url: URL, line: Int)?
     private var editorCursorLine: (url: URL, line: Int)?
     /// Whether the preview outlines the block holding Neovim's cursor, while linked.
@@ -93,8 +97,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             updateZoomLabel()
         }
         editor.onScroll = { [weak self] url, line in
-            self?.editorTopLine = (url, line)
-            self?.updateSourceLine()
+            guard let self else { return }
+            editorTopLine = (url, line)
+            if !linked { lastActivePane = .editor }
+            updateSourceLine()
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
         editor.onUnsavedChangesChange = { [weak self] _ in self?.updateEditedState() }
@@ -226,6 +232,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     private func previewScrolled(to line: Int) {
         previewTopLine = line
+        if !linked { lastActivePane = .preview }
         guard linked, !editorItem.isCollapsed, let url = preview.documentURL else { return }
         editorTopLine = (url, line)
         editor.scroll(url, toLine: line)
@@ -262,7 +269,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         updateLinkToggle()
         updateCursorLine()
         if linked {
-            syncToFocusedPane()
+            syncToActivePane()
         } else {
             updateSourceLine()
         }
@@ -274,10 +281,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         updateCursorLine()
     }
 
-    /// On linking, brings the other pane to the zoom level and scroll position of the one with
-    /// focus, the one the user was working in.
-    private func syncToFocusedPane() {
-        if editorHasFocus {
+    /// On linking, brings the other pane to the zoom level and scroll position of the one the
+    /// user last scrolled or zoomed, or, if neither, of the one with focus.
+    private func syncToActivePane() {
+        let pane = lastActivePane ?? (editorHasFocus ? .editor : .preview)
+        lastActivePane = nil
+        if pane == .editor {
             // The editor follows the preview's zoom from here on, so this leaves both at its level.
             preview.setZoom(editor.zoom)
             updateSourceLine()
@@ -325,6 +334,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     private var zoomsEditor: Bool { !linked && editorHasFocus }
 
     private func changeZoom(_ step: Zoom.Step) {
+        if !linked { lastActivePane = zoomsEditor ? .editor : .preview }
         if zoomsEditor {
             editor.zoom = step.apply(to: editor.zoom)
             updateZoomLabel()
