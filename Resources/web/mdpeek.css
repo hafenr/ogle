@@ -386,3 +386,20 @@ body.dragging #welcome .drop-zone {
     background: var(--lime);
   }
 }
+
+/* Find: all matches, and a stronger mark for the current one. */
+::highlight(find-match) {
+  background-color: rgb(198 240 90 / 0.55);
+}
+
+::highlight(find-current) {
+  background-color: #c6f05a;
+  color: #23262b;
+  text-decoration: underline 2px #23262b;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::highlight(find-match) {
+    background-color: rgb(198 240 90 / 0.3);
+  }
+}

@@ -115,6 +115,7 @@ window.mdpeek = (() => {
     centerAnchor = viewCenterAnchor();
     postOutline();
     updateSection(true);
+    refreshFind();
     if (preserveScroll && !quiet) showToast("Reloaded — file changed on disk");
   }
 
@@ -198,6 +199,98 @@ window.mdpeek = (() => {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("visible"), 1800);
   }
+
+  // MARK: Find
+
+  // Matches are painted with the CSS Custom Highlight API, which leaves the DOM as it is, so
+  // the scroll anchoring (which compares the blocks' text) is unaffected.
+  const findMatches = new Highlight();
+  const findCurrent = new Highlight();
+  CSS.highlights.set("find-match", findMatches);
+  CSS.highlights.set("find-current", findCurrent);
+  let findState = null;
+
+  // Text that is not shown, or is part of the page's own controls, is not searched.
+  const UNSEARCHED = "[hidden], .anchor, .md-button, .code-block-header, style, script";
+
+  function findRanges(query, caseSensitive) {
+    const pattern = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), caseSensitive ? "gu" : "giu");
+    const ranges = [];
+    const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => (node.parentElement?.closest(UNSEARCHED) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      for (const match of node.data.matchAll(pattern)) {
+        if (!match[0]) continue;
+        const range = new Range();
+        range.setStart(node, match.index);
+        range.setEnd(node, match.index + match[0].length);
+        ranges.push(range);
+      }
+    }
+    return ranges;
+  }
+
+  function paintFind() {
+    findMatches.clear();
+    findCurrent.clear();
+    findState?.ranges.forEach((range, index) => (index === findState.index ? findCurrent : findMatches).add(range));
+  }
+
+  // `index` counts from 1; 0 without matches.
+  const findResult = () => ({ index: findState?.ranges.length ? findState.index + 1 : 0, count: findState?.ranges.length ?? 0 });
+
+  // Scrolls the current match into view, a third of the way down, if it is not in view.
+  function revealMatch() {
+    const range = findState?.ranges[findState.index];
+    if (!range) return;
+    const rect = range.getBoundingClientRect();
+    if (rect.top >= 16 && rect.bottom <= innerHeight - 16) return;
+    window.scrollTo({ top: scrollY + rect.top - innerHeight / 3 });
+  }
+
+  // Finds `query` and makes the first match at or below the top of the window the current one.
+  function find(query, caseSensitive) {
+    if (!query) {
+      clearFind();
+      return findResult();
+    }
+    const ranges = findRanges(query, caseSensitive);
+    const visible = ranges.findIndex((range) => range.getBoundingClientRect().bottom > 0);
+    findState = { query, caseSensitive, ranges, index: Math.max(visible, 0) };
+    paintFind();
+    revealMatch();
+    return findResult();
+  }
+
+  function findNext(backwards) {
+    const count = findState?.ranges.length;
+    if (!count) return findResult();
+    findState.index = (findState.index + (backwards ? count - 1 : 1)) % count;
+    paintFind();
+    revealMatch();
+    return findResult();
+  }
+
+  function clearFind() {
+    findState = null;
+    paintFind();
+  }
+
+  // After a render, finds the matches in the new content again, without scrolling, and
+  // reports the new count.
+  function refreshFind() {
+    if (!findState) return;
+    const ranges = findRanges(findState.query, findState.caseSensitive);
+    findState = { ...findState, ranges, index: Math.min(findState.index, Math.max(ranges.length - 1, 0)) };
+    paintFind();
+    native({ type: "find", ...findResult() });
+  }
+
+  // Esc on the page closes the find bar (unless it closes a full-window diagram).
+  addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !document.querySelector(".lightbox")) native({ type: "escape" });
+  });
 
   // MARK: Code blocks and diagram controls
 
@@ -632,5 +725,5 @@ window.mdpeek = (() => {
     return Math.floor(line);
   }
 
-  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop };
+  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind };
 })();

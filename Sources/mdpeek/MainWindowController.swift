@@ -29,7 +29,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     private var editorTopLine: (url: URL, line: Int)?
     /// The source line at the top of the preview, once scrolled away from the top.
     private var previewTopLine: Int?
-    private var findItem: NSSearchToolbarItem?
+    private var findButton: NSButton?
     private var editorButton: NSButton?
     /// The picker behind the More menu's Share item.
     private var sharePicker: NSSharingServicePicker?
@@ -93,6 +93,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
         preview.onScroll = { [weak self] line in self?.previewScrolled(to: line) }
+        preview.onFindBarChange = { [weak self] shown in self?.findButton?.state = shown ? .on : .off }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -270,20 +271,25 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     }
 
     @objc func showFind(_ sender: Any?) {
-        findItem?.beginSearchInteraction()
+        preview.showFindBar()
+    }
+
+    @objc private func toggleFindBar(_ sender: Any?) {
+        if preview.isFindBarShown {
+            preview.hideFindBar()
+        } else if preview.documentURL != nil {
+            preview.showFindBar()
+        } else {
+            findButton?.state = .off
+        }
     }
 
     @objc func findNext(_ sender: Any?) {
-        preview.find(findItem?.searchField.stringValue ?? "")
+        preview.findNext(backwards: false)
     }
 
     @objc func findPrevious(_ sender: Any?) {
-        preview.find(findItem?.searchField.stringValue ?? "", backwards: true)
-    }
-
-    @objc private func findFieldChanged(_ sender: NSSearchField) {
-        let backwards = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
-        preview.find(sender.stringValue, backwards: backwards)
+        preview.findNext(backwards: true)
     }
 
     @objc func printDocument(_ sender: Any?) {
@@ -364,14 +370,16 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     ) -> NSToolbarItem? {
         switch itemIdentifier {
         case .find:
-            let item = NSSearchToolbarItem(itemIdentifier: itemIdentifier)
+            let button = NSButton(
+                image: NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: "Find")!,
+                target: self, action: #selector(toggleFindBar(_:)))
+            button.bezelStyle = .toolbar
+            button.setButtonType(.pushOnPushOff)
+            button.toolTip = "Find"
+            findButton = button
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
             item.label = "Find"
-            item.preferredWidthForSearchField = 200
-            item.searchField.placeholderString = "Find"
-            item.searchField.sendsWholeSearchString = true
-            item.searchField.target = self
-            item.searchField.action = #selector(findFieldChanged(_:))
-            findItem = item
+            item.view = button
             return item
         case .editor:
             let button = NSButton(

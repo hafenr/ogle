@@ -12,6 +12,10 @@ struct Heading: Equatable {
 final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
     private let pageURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")!
     private var webView: DropTargetWebView!
+    private let findBar = FindBarView()
+    /// The web view's top: at the top of the view, under the toolbar, or below the find bar.
+    private var webViewTop: NSLayoutConstraint!
+    private var webViewBelowFindBar: NSLayoutConstraint!
     private var isPageLoaded = false
     private var document: (url: URL, data: Data)?
     private var watcher: FileWatcher?
@@ -28,6 +32,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     var onWordCountChange: ((Int) -> Void)?
     /// Called with the current section as the status bar shows it: "Download · 3 of 9".
     var onSectionTextChange: ((String?) -> Void)?
+    var onFindBarChange: ((Bool) -> Void)?
 
     var documentURL: URL? { document?.url }
     /// The source line kept at the top of the view while it follows the editor.
@@ -59,10 +64,21 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         webView.isInspectable = true
 
         let container = NSView()
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(webView)
+        findBar.isHidden = true
+        findBar.onChange = { [weak self] in self?.findChanged() }
+        findBar.onNext = { [weak self] backwards in self?.findNext(backwards: backwards) }
+        findBar.onDone = { [weak self] in self?.hideFindBar() }
+        for view in [webView!, findBar] as [NSView] {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(view)
+        }
+        webViewTop = webView.topAnchor.constraint(equalTo: container.topAnchor)
+        webViewBelowFindBar = webView.topAnchor.constraint(equalTo: findBar.bottomAnchor)
         NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: container.topAnchor),
+            findBar.topAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor),
+            findBar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            findBar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            webViewTop,
             webView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             webView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
@@ -125,14 +141,59 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
     // MARK: Find
 
-    func find(_ string: String, backwards: Bool = false) {
-        guard !string.isEmpty else { return }
-        let configuration = WKFindConfiguration()
-        configuration.backwards = backwards
-        configuration.wraps = true
-        webView.find(string, configuration: configuration) { result in
-            if !result.matchFound { NSSound.beep() }
+    var isFindBarShown: Bool { !findBar.isHidden }
+
+    /// Shows the find bar, focused, with its text selected.
+    func showFindBar() {
+        if findBar.isHidden {
+            findBar.isHidden = false
+            webViewTop.isActive = false
+            webViewBelowFindBar.isActive = true
+            onFindBarChange?(true)
+            if !findBar.query.isEmpty { findChanged() }
         }
+        findBar.focus()
+    }
+
+    /// Hides the find bar and the highlighted matches.
+    func hideFindBar() {
+        guard !findBar.isHidden else { return }
+        findBar.isHidden = true
+        webViewBelowFindBar.isActive = false
+        webViewTop.isActive = true
+        if isPageLoaded {
+            webView.callAsyncJavaScript("mdpeek.clearFind()", in: nil, in: .page)
+        }
+        view.window?.makeFirstResponder(webView)
+        onFindBarChange?(false)
+    }
+
+    /// Goes to the next (or previous) match, or shows the find bar if there is nothing to find.
+    func findNext(backwards: Bool) {
+        guard !findBar.isHidden, !findBar.query.isEmpty else {
+            showFindBar()
+            return
+        }
+        runFind("return mdpeek.findNext(backwards)", arguments: ["backwards": backwards])
+    }
+
+    private func findChanged() {
+        runFind("return mdpeek.find(query, caseSensitive)", arguments: ["query": findBar.query, "caseSensitive": findBar.isCaseSensitive])
+    }
+
+    private func runFind(_ script: String, arguments: [String: Any]) {
+        guard isPageLoaded, document != nil else { return }
+        webView.callAsyncJavaScript(script, arguments: arguments, in: nil, in: .page) { [weak self] result in
+            guard case .success(let value) = result, let value = value as? [String: Any] else { return }
+            MainActor.assumeIsolated { self?.showFindResult(value) }
+        }
+    }
+
+    private func showFindResult(_ result: [String: Any]) {
+        let index = (result["index"] as? NSNumber)?.intValue ?? 0
+        let count = (result["count"] as? NSNumber)?.intValue ?? 0
+        findBar.setResult(index: index, count: count)
+        if count == 0 && !findBar.query.isEmpty { NSSound.beep() }
     }
 
     // MARK: Zoom
@@ -192,6 +253,13 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             currentHeadingID = body["id"] as? String
             updateStatusSection()
             onSectionChange?(currentHeadingID)
+        case "find":
+            guard !findBar.isHidden else { return }
+            let index = (body["index"] as? NSNumber)?.intValue ?? 0
+            let count = (body["count"] as? NSNumber)?.intValue ?? 0
+            findBar.setResult(index: index, count: count)
+        case "escape":
+            hideFindBar()
         case "scroll":
             guard let line = (body["line"] as? NSNumber)?.intValue else { return }
             onScroll?(line)

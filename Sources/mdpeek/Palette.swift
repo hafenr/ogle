@@ -15,6 +15,10 @@ enum Palette {
     static var controlFill: NSColor { dynamic(light: .white, dark: NSColor(white: 1, alpha: 0.08)) }
     /// Thin lines between parts of a control.
     static var hairline: NSColor { dynamic(light: NSColor(srgbHex: 0xE3E3E6), dark: NSColor(white: 1, alpha: 0.1)) }
+    /// A toggle's fill while pressed.
+    static var pressedFill: NSColor { dynamic(light: NSColor(srgbHex: 0xE4E4E8), dark: NSColor(white: 1, alpha: 0.18)) }
+    /// Bars above the page, such as the find bar.
+    static var barBackground: NSColor { dynamic(light: NSColor(srgbHex: 0xFAFAFA), dark: NSColor(srgbHex: 0x161B22)) }
     /// The page's background, which the bars along the preview share.
     static var pageBackground: NSColor { dynamic(light: .white, dark: NSColor(srgbHex: 0x0D1117)) }
 
