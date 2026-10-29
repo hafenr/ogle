@@ -93,5 +93,5 @@ Or use File › Open… (⌘O), drop a file on the Dock icon, or pick mdpeek fro
 
 - `Sources/mdpeek` – the AppKit app: window with sidebar, `WKWebView` preview, FSEvents file watcher, cmark-gfm rendering, and the editor pane ([SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) running Neovim).
 - `Resources/mdpeek.lua` – loaded into the editor's Neovim; reports its scroll position, unsaved changes and background color to mdpeek over a Unix socket, and opens and scrolls to what mdpeek shows. The Neovim release is pinned in `build.sh`.
-- `Resources/AppIcon.icns`, `Resources/icon/` – the app icon and its SVG sources; `scripts/make_icon.py` regenerates them.
+- `Resources/AppIcon.icns`, `Resources/icon/` – the app icon and its SVG sources; `scripts/make_icon.py` regenerates them. `icon.svg` (the logo, with the tile as a slab casting a shadow) is for the README and the start page; the app icon is built from `icon-app.svg` and `icon-small.svg`, which keep to the standard rounded square so macOS shows them full size.
 - `Resources/web` – the page that displays the rendered HTML (`mdpeek.js` handles sanitizing, alerts, highlighting, Mermaid, and scroll preservation). Its third-party libraries are pinned in `package.json` and copied into the app bundle by `build.sh`.
