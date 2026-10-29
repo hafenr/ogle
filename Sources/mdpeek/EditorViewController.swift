@@ -27,7 +27,10 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
     var zoom: CGFloat = 1 {
         didSet { session?.terminal.font = font }
     }
-    private var font: NSFont { .monospacedSystemFont(ofSize: 13 * zoom, weight: .regular) }
+    /// At actual size, about as large as the preview's 16 px body text: the monospaced font's
+    /// taller lowercase makes 15 pt read the same.
+    private static let baseFontSize: CGFloat = 15
+    private var font: NSFont { .monospacedSystemFont(ofSize: Self.baseFontSize * zoom, weight: .regular) }
 
     override func loadView() {
         view = NSView()
