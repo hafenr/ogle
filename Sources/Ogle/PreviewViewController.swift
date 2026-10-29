@@ -220,31 +220,34 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             showFindBar()
             return
         }
-        runFind("return ogle.findNext(backwards)", arguments: ["backwards": backwards])
+        runFind("return ogle.findNext(backwards)", arguments: ["backwards": backwards], beepsWithoutMatches: true)
     }
 
+    /// Finds as the query is typed, without beeping at a query that matches nothing yet.
     private func findChanged() {
-        runFind("return ogle.find(query, caseSensitive)", arguments: ["query": findBar.query, "caseSensitive": findBar.isCaseSensitive])
+        runFind(
+            "return ogle.find(query, caseSensitive)", arguments: ["query": findBar.query, "caseSensitive": findBar.isCaseSensitive],
+            beepsWithoutMatches: false)
     }
 
-    private func runFind(_ script: String, arguments: [String: Any]) {
+    private func runFind(_ script: String, arguments: [String: Any], beepsWithoutMatches: Bool) {
         guard isPageLoaded, document != nil else { return }
         webView.callAsyncJavaScript(script, arguments: arguments, in: nil, in: .page) { [weak self] result in
             switch result {
             case .success(let value):
                 guard let value = value as? [String: Any] else { return }
-                MainActor.assumeIsolated { self?.showFindResult(value) }
+                MainActor.assumeIsolated { self?.showFindResult(value, beepsWithoutMatches: beepsWithoutMatches) }
             case .failure(let error):
                 NSLog("ogle: finding failed: %@", String(describing: error))
             }
         }
     }
 
-    private func showFindResult(_ result: [String: Any]) {
+    private func showFindResult(_ result: [String: Any], beepsWithoutMatches: Bool) {
         let index = (result["index"] as? NSNumber)?.intValue ?? 0
         let count = (result["count"] as? NSNumber)?.intValue ?? 0
         findBar.setResult(index: index, count: count)
-        if count == 0 && !findBar.query.isEmpty { NSSound.beep() }
+        if beepsWithoutMatches && count == 0 { NSSound.beep() }
     }
 
     // MARK: Zoom
