@@ -13,6 +13,14 @@
 - Find with match counts, an outline sidebar, and Open Quickly for recent files
 - Native macOS, light and dark
 
+<p align="center">
+  <img src="docs/screenshots/writing.png" alt="Ogle with Neovim on the left and the rendered preview on the right, scrolled together">
+</p>
+<p align="center">
+  <img src="docs/screenshots/reading.png" alt="Ogle showing a Markdown file with an image, a callout and a Mermaid flowchart" width="49%">
+  <img src="docs/screenshots/start.png" alt="Ogle's start page: a drop area under the Ogle eye, beside the Open Quickly list of recent files" width="49%">
+</p>
+
 ## Installation
 
 ### Download
