@@ -6,7 +6,7 @@
 
 <p align="center"><b>Ogle at your Markdown files... with vim.</b></p>
 
-- Renders Markdown the way GitHub does, Mermaid diagrams included
+- Markdown with Mermaid diagrams, syntax highlighting and alerts
 - Neovim built in, with your own config, beside the preview
 - Scroll lock: the editor and the preview scroll and zoom together, or apart
 - Reloads on save and highlights what changed
