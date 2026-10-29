@@ -53,6 +53,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fileMenu.addItem(withTitle: "Open in Editor", action: #selector(MainWindowController.openInEditor(_:)), keyEquivalent: "o")
             .keyEquivalentModifierMask = [.command, .option]
         fileMenu.addItem(.separator())
+        fileMenu.addItem(withTitle: "Close File", action: #selector(MainWindowController.closeFile(_:)), keyEquivalent: "w")
+            .keyEquivalentModifierMask = [.command, .shift]
         fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         fileMenu.addItem(.separator())
         fileMenu.addItem(withTitle: "Export as PDF…", action: #selector(MainWindowController.exportPDF(_:)), keyEquivalent: "e")

@@ -128,6 +128,20 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         render(preserveScroll: false)
     }
 
+    /// Closes the document and shows the start page.
+    func close() {
+        hideFindBar()
+        document = nil
+        watcher = nil
+        sourceLine = nil
+        cursorLine = nil
+        showsUnsavedNotice = false
+        headings = []
+        currentHeadingID = nil
+        guard isPageLoaded else { return }
+        webView.callAsyncJavaScript("ogle.showWelcome()", in: nil, in: .page)
+    }
+
     private func reload() {
         guard let document else { return }
         // Atomic saves briefly remove the file; the event for the replacement follows.

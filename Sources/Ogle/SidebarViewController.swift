@@ -97,6 +97,14 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         }
     }
 
+    /// Forgets the current file and lists the recent files, as at launch.
+    func clearCurrent() {
+        current = nil
+        headings = []
+        currentHeadingID = nil
+        setMode(.files)
+    }
+
     func setHeadings(_ headings: [Heading]) {
         self.headings = headings
         if mode == .outline { reload() }

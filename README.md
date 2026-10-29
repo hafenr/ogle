@@ -96,6 +96,7 @@ Or use File › Open… (⌘O), drop a file on the Dock icon, or pick Ogle from 
 | Shortcut | Action |
 | --- | --- |
 | ⌘O / ⇧⌘O | Open… / Open Quickly… |
+| ⇧⌘W | Close the file and go back to the start page |
 | ⌘F, ⌘G / ⇧⌘G | Find, next / previous match |
 | ⌃⌘E | Show or hide the editor |
 | ⌃⌘S | Show or hide the sidebar |

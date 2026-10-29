@@ -133,6 +133,29 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         }
     }
 
+    /// Closes the file, and Neovim with it after asking about unsaved changes, and shows the
+    /// start page with the file at the top of the recent files.
+    @objc func closeFile(_ sender: Any?) {
+        guard let url = preview.documentURL, confirmDiscardingEditorChanges() else { return }
+        editor.stop()
+        if !editorItem.isCollapsed { setEditorVisible(false) }
+        preview.close()
+        sidebar.clearCurrent()
+        editorTopLine = nil
+        editorCursorLine = nil
+        previewTopLine = nil
+        lastActivePane = nil
+        window?.title = "Ogle"
+        window?.subtitle = ""
+        window?.representedURL = nil
+        window?.isDocumentEdited = false
+        statusBar.isActive = false
+        updateEditorButton()
+        recents.add(url)
+        sendRecentFiles()
+        window?.makeFirstResponder(preview.focusView)
+    }
+
     /// Gives the start page the recent files, with when each was opened as the sidebar shows it.
     private func sendRecentFiles() {
         preview.recentFiles = recents.urls.map { url in
@@ -428,7 +451,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
-        case #selector(printDocument(_:)), #selector(exportPDF(_:)), #selector(openInEditor(_:)),
+        case #selector(printDocument(_:)), #selector(exportPDF(_:)), #selector(openInEditor(_:)), #selector(closeFile(_:)),
             #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)), #selector(toggleEditor(_:)):
             return preview.documentURL != nil
         case #selector(toggleCursorHighlight(_:)):
