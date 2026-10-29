@@ -4,28 +4,45 @@ import UniformTypeIdentifiers
 private extension NSToolbarItem.Identifier {
     static let find = Self("find")
     static let zoom = Self("zoom")
+    static let editor = Self("editor")
+    static let syncScrolling = Self("syncScrolling")
     static let openInEditor = Self("openInEditor")
     static let share = Self("share")
 }
 
 @MainActor
-final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuItemValidation,
+final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate, NSMenuItemValidation,
     NSSharingServicePickerToolbarItemDelegate
 {
     private let recents = RecentFiles()
     private let sidebar: SidebarViewController
+    private let editor = EditorViewController()
+    private let sidebarItem: NSSplitViewItem
+    private let editorItem: NSSplitViewItem
+    private let splitView: NSSplitView
+    /// The width of the editor when last shown.
+    private var editorWidth: CGFloat?
     private let preview = PreviewViewController()
+    /// Whether the preview follows the editor's scrolling.
+    private var syncScrolling = true
+    private var editorTopLine: (url: URL, line: Int)?
     private var findItem: NSSearchToolbarItem?
+    private var syncScrollingItem: NSToolbarItem?
     private let zoomControl = NSSegmentedControl(
         labels: ["−", "100%", "+"], trackingMode: .momentary, target: nil, action: nil)
 
     init() {
         sidebar = SidebarViewController(recents: recents)
         let split = NSSplitViewController()
-        let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebar)
+        sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebar)
+        editorItem = NSSplitViewItem(viewController: editor)
+        editorItem.canCollapse = true
+        editorItem.minimumThickness = 320
         split.addSplitViewItem(sidebarItem)
+        split.addSplitViewItem(editorItem)
         split.addSplitViewItem(NSSplitViewItem(viewController: preview))
         split.splitView.autosaveName = "MainSplitView"
+        splitView = split.splitView
         // Nothing to list yet on first launch: start with the start page alone.
         if recents.urls.isEmpty { sidebarItem.isCollapsed = true }
 
@@ -40,6 +57,10 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
         window.center()
         window.setFrameAutosaveName("MainWindow")
         super.init(window: window)
+        window.delegate = self
+        // Loading the split view restores the state it saved of every item; the editor starts
+        // closed regardless.
+        editorItem.isCollapsed = true
 
         zoomControl.target = self
         zoomControl.action = #selector(zoomControlClicked(_:))
@@ -59,6 +80,11 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
         preview.onOutlineChange = { [weak self] headings in self?.sidebar.setHeadings(headings) }
         preview.onSectionChange = { [weak self] id in self?.sidebar.setCurrentHeading(id) }
         preview.onZoomChange = { [weak self] zoom in self?.updateZoomLabel(zoom) }
+        editor.onScroll = { [weak self] url, line in
+            self?.editorTopLine = (url, line)
+            self?.updateSourceLine()
+        }
+        editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -83,10 +109,80 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
         window?.subtitle = (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
         window?.representedURL = url
         sidebar.select(url)
+        if !editorItem.isCollapsed {
+            editor.open(url)
+        }
+        updateSourceLine()
         return true
     }
 
+    private func setEditorVisible(_ visible: Bool) {
+        if visible {
+            editorItem.isCollapsed = false
+            splitView.layoutSubtreeIfNeeded()
+            // At its last width, or the first time sharing the space beside the sidebar evenly
+            // with the preview.
+            let start = sidebarItem.isCollapsed ? 0 : sidebar.view.frame.maxX + splitView.dividerThickness
+            splitView.setPosition(start + (editorWidth ?? (splitView.bounds.maxX - start) / 2), ofDividerAt: 1)
+            if let url = preview.documentURL {
+                editor.open(url)
+            }
+        } else {
+            editorWidth = editor.view.frame.width
+            editorItem.isCollapsed = true
+        }
+        syncScrollingItem?.isHidden = !visible
+        window?.makeFirstResponder(visible ? editor.focusView : preview.focusView)
+        updateSourceLine()
+    }
+
+    private func updateSourceLine() {
+        guard syncScrolling, !editorItem.isCollapsed, let editorTopLine, let url = preview.documentURL,
+            editorTopLine.url.resolvingSymlinksInPath() == url.resolvingSymlinksInPath()
+        else {
+            preview.sourceLine = nil
+            return
+        }
+        preview.sourceLine = editorTopLine.line
+    }
+
+    /// Asks whether to discard unsaved changes in the editor, if there are any. Returns
+    /// whether to go ahead, after ending Neovim.
+    func confirmDiscardingEditorChanges() -> Bool {
+        guard editor.hasUnsavedChanges else { return true }
+        showWindow(nil)
+        if editorItem.isCollapsed { setEditorVisible(true) }
+        let alert = NSAlert()
+        alert.messageText = "Discard the unsaved changes in the editor?"
+        alert.informativeText = "Neovim has unsaved changes. Save them with :w first to keep them."
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Discard Changes").hasDestructiveAction = true
+        guard alert.runModal() == .alertSecondButtonReturn else { return false }
+        editor.stop()
+        return true
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        confirmDiscardingEditorChanges()
+    }
+
     // MARK: Actions
+
+    @objc func toggleEditor(_ sender: Any?) {
+        setEditorVisible(editorItem.isCollapsed)
+    }
+
+    @objc func toggleSyncScrolling(_ sender: Any?) {
+        syncScrolling.toggle()
+        updateSyncScrollingItem()
+        updateSourceLine()
+    }
+
+    private func updateSyncScrollingItem() {
+        let title = syncScrolling ? "Stop Following the Editor" : "Follow the Editor"
+        syncScrollingItem?.image = NSImage(systemSymbolName: syncScrolling ? "lock" : "lock.open", accessibilityDescription: title)
+        syncScrollingItem?.toolTip = title
+    }
 
     @objc func zoomIn(_ sender: Any?) { preview.zoomIn() }
     @objc func zoomOut(_ sender: Any?) { preview.zoomOut() }
@@ -160,10 +256,13 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
         case #selector(printDocument(_:)), #selector(exportPDF(_:)), #selector(openInEditor(_:)),
-            #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)):
-            preview.documentURL != nil
+            #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)), #selector(toggleEditor(_:)):
+            return preview.documentURL != nil
+        case #selector(toggleSyncScrolling(_:)):
+            menuItem.state = syncScrolling ? .on : .off
+            return !editorItem.isCollapsed
         default:
-            true
+            return true
         }
     }
 
@@ -176,7 +275,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
     // MARK: NSToolbarDelegate
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .zoom, .openInEditor, .share]
+        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .find, .zoom, .syncScrolling, .editor, .openInEditor, .share]
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
@@ -202,6 +301,25 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSMenuI
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
             item.label = "Zoom"
             item.view = zoomControl
+            return item
+        case .editor:
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+            item.label = "Editor"
+            item.toolTip = "Toggle Editor"
+            item.image = NSImage(systemSymbolName: "rectangle.split.2x1", accessibilityDescription: "Toggle Editor")
+            item.isBordered = true
+            item.target = self
+            item.action = #selector(toggleEditor(_:))
+            return item
+        case .syncScrolling:
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+            item.label = "Follow Editor"
+            item.isBordered = true
+            item.isHidden = editorItem.isCollapsed
+            item.target = self
+            item.action = #selector(toggleSyncScrolling(_:))
+            syncScrollingItem = item
+            updateSyncScrollingItem()
             return item
         case .openInEditor:
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)

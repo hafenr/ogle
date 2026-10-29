@@ -22,6 +22,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        windowController.confirmDiscardingEditorChanges() ? .terminateNow : .terminateCancel
+    }
+
     @objc func openDocument(_ sender: Any?) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = Markdown.fileExtensions.compactMap { UTType(filenameExtension: $0) }
@@ -55,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let editMenu = submenu(of: mainMenu, title: "Edit")
         editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editMenu.addItem(.separator())
         let findMenu = NSMenu(title: "Find")
@@ -67,6 +72,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let viewMenu = submenu(of: mainMenu, title: "View")
         viewMenu.addItem(withTitle: "Toggle Sidebar", action: #selector(NSSplitViewController.toggleSidebar(_:)), keyEquivalent: "s")
             .keyEquivalentModifierMask = [.command, .control]
+        viewMenu.addItem(withTitle: "Toggle Editor", action: #selector(MainWindowController.toggleEditor(_:)), keyEquivalent: "e")
+            .keyEquivalentModifierMask = [.command, .control]
+        viewMenu.addItem(withTitle: "Follow Editor Scrolling", action: #selector(MainWindowController.toggleSyncScrolling(_:)), keyEquivalent: "")
         viewMenu.addItem(.separator())
         viewMenu.addItem(withTitle: "Actual Size", action: #selector(MainWindowController.actualSize(_:)), keyEquivalent: "0")
         viewMenu.addItem(withTitle: "Zoom In", action: #selector(MainWindowController.zoomIn(_:)), keyEquivalent: "+")

@@ -28,6 +28,15 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     var onZoomChange: ((CGFloat) -> Void)?
 
     var documentURL: URL? { document?.url }
+    /// The source line kept at the top of the view while it follows the editor.
+    var sourceLine: Int? {
+        didSet {
+            guard isPageLoaded else { return }
+            webView.callAsyncJavaScript(
+                "mdpeek.followSourceLine(line)", arguments: ["line": sourceLine.map(NSNumber.init) ?? NSNull()],
+                in: nil, in: .page)
+        }
+    }
     var zoom: CGFloat { webView.pageZoom }
     /// The view that should have keyboard focus, so the document scrolls with the keyboard.
     var focusView: NSView {
@@ -65,6 +74,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
 
     func show(_ url: URL) throws {
         document = (url, try Data(contentsOf: url))
+        sourceLine = nil
         watcher = FileWatcher(url: url) { [weak self] in self?.reload() }
         statusBar.isActive = true
         render(preserveScroll: false)

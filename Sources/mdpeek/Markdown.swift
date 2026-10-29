@@ -9,7 +9,8 @@ enum Markdown {
     /// Raw HTML is passed through and sanitized by the web view before display.
     static func html(from data: Data) -> String {
         cmark_gfm_core_extensions_ensure_registered()
-        let options = CMARK_OPT_UNSAFE | CMARK_OPT_FOOTNOTES
+        // Source positions (data-sourcepos) let the preview follow the editor's scrolling.
+        let options = CMARK_OPT_UNSAFE | CMARK_OPT_FOOTNOTES | CMARK_OPT_SOURCEPOS
         let parser = cmark_parser_new(options)
         defer { cmark_parser_free(parser) }
         for name in ["table", "strikethrough", "autolink", "tagfilter", "tasklist"] {

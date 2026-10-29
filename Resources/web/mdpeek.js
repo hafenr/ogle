@@ -107,8 +107,10 @@ window.mdpeek = (() => {
     content.hidden = false;
     const anchor = preserveScroll ? scrollAnchor() : null;
     content.replaceChildren(...container.childNodes);
-    if (anchor) restoreScrollAnchor(anchor);
+    if (sourceLine) scrollToSourceLine(sourceLine);
+    else if (anchor) restoreScrollAnchor(anchor);
     else window.scrollTo(0, 0);
+    reflowAnchor = scrollAnchor();
     postOutline();
     updateSection(true);
     if (preserveScroll && !quiet) showToast("Reloaded — file changed on disk");
@@ -312,6 +314,7 @@ window.mdpeek = (() => {
       const [title, icon] = ALERTS[type];
       alert.innerHTML = `<p class="markdown-alert-title">${icon.replace("octicon ", "octicon mr-2 ")}${title}</p>`;
       alert.append(...quote.childNodes);
+      alert.dataset.sourcepos = quote.dataset.sourcepos;
       quote.replaceWith(alert);
     }
   }
@@ -348,7 +351,9 @@ window.mdpeek = (() => {
         diagramCache.set(key, diagram);
       }
       cache.set(key, diagram);
-      code.parentElement.replaceWith(diagram.cloneNode(true));
+      const figure = diagram.cloneNode(true);
+      figure.dataset.sourcepos = code.parentElement.dataset.sourcepos;
+      code.parentElement.replaceWith(figure);
     }
     diagramCache = cache;
     return true;
@@ -505,5 +510,47 @@ window.mdpeek = (() => {
 
   const signature = (block) => `${block.tagName}:${block.textContent}`;
 
-  return { render, showWelcome, scrollToHeading };
+  // Keeps the text at the top of the window in place when the window's width changes (resized,
+  // or the sidebar or editor toggled) and the text reflows.
+  let reflowAnchor = null;
+  let reflowAnchorScheduled = false;
+  addEventListener("scroll", () => {
+    if (reflowAnchorScheduled) return;
+    reflowAnchorScheduled = true;
+    requestAnimationFrame(() => {
+      reflowAnchorScheduled = false;
+      reflowAnchor = scrollAnchor();
+    });
+  }, { passive: true });
+  addEventListener("resize", () => {
+    if (sourceLine) scrollToSourceLine(sourceLine);
+    else if (reflowAnchor) restoreScrollAnchor(reflowAnchor);
+  });
+
+  // MARK: Following the editor
+
+  // The Markdown source line kept at the top of the window while the page follows the
+  // editor, or null. Renders in progress apply it when they finish.
+  let sourceLine = null;
+  function followSourceLine(line) {
+    sourceLine = line;
+    if (line) scrollToSourceLine(line);
+  }
+
+  // Scrolls so that Markdown source line `line` is at the top of the window, at the
+  // proportional position within the innermost block that contains it. Elements with
+  // source positions come in document order, which is also the order of their first lines.
+  function scrollToSourceLine(line) {
+    let top = 0;
+    for (const element of content.querySelectorAll("[data-sourcepos]")) {
+      const [, start, end] = element.dataset.sourcepos.match(/^(\d+):\d+-(\d+)/).map(Number);
+      if (start > line) break;
+      const rect = element.getBoundingClientRect();
+      if (!rect.height) continue;
+      top = rect.top + scrollY + Math.min((line - start) / (end - start + 1), 1) * rect.height;
+    }
+    window.scrollTo(0, line > 1 ? top : 0);
+  }
+
+  return { render, showWelcome, scrollToHeading, followSourceLine };
 })();
