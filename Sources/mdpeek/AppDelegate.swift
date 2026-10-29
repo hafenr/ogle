@@ -74,7 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .keyEquivalentModifierMask = [.command, .control]
         viewMenu.addItem(withTitle: "Toggle Editor", action: #selector(MainWindowController.toggleEditor(_:)), keyEquivalent: "e")
             .keyEquivalentModifierMask = [.command, .control]
-        viewMenu.addItem(withTitle: "Follow Editor Scrolling", action: #selector(MainWindowController.toggleSyncScrolling(_:)), keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Sync Scrolling with Editor", action: #selector(MainWindowController.toggleSyncScrolling(_:)), keyEquivalent: "")
         viewMenu.addItem(.separator())
         viewMenu.addItem(withTitle: "Actual Size", action: #selector(MainWindowController.actualSize(_:)), keyEquivalent: "0")
         viewMenu.addItem(withTitle: "Zoom In", action: #selector(MainWindowController.zoomIn(_:)), keyEquivalent: "+")

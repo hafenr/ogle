@@ -23,9 +23,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// The width of the editor when last shown.
     private var editorWidth: CGFloat?
     private let preview = PreviewViewController()
-    /// Whether the preview follows the editor's scrolling.
+    /// Whether scrolling the editor or the preview scrolls the other.
     private var syncScrolling = true
     private var editorTopLine: (url: URL, line: Int)?
+    /// The source line at the top of the preview, once scrolled away from the top.
+    private var previewTopLine: Int?
     private var findItem: NSSearchToolbarItem?
     private var syncScrollingItem: NSToolbarItem?
     private let zoomControl = NSSegmentedControl(
@@ -88,6 +90,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             self?.updateSourceLine()
         }
         editor.onQuit = { [weak self] in self?.setEditorVisible(false) }
+        preview.onScroll = { [weak self] line in self?.previewScrolled(to: line) }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -112,8 +115,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         window?.subtitle = (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
         window?.representedURL = url
         sidebar.select(url)
+        previewTopLine = nil
         if !editorItem.isCollapsed {
-            editor.open(url)
+            editor.open(url, atLine: nil)
         }
         updateSourceLine()
         return true
@@ -128,7 +132,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             let start = sidebarItem.isCollapsed ? 0 : sidebar.view.frame.maxX + splitView.dividerThickness
             splitView.setPosition(start + (editorWidth ?? (splitView.bounds.maxX - start) / 2), ofDividerAt: 1)
             if let url = preview.documentURL {
-                editor.open(url)
+                // Where the preview is, if scrolled; otherwise where Neovim shows the file.
+                let line = syncScrolling ? previewTopLine : nil
+                if let line { editorTopLine = (url, line) }
+                editor.open(url, atLine: line)
             }
         } else {
             editorWidth = editor.view.frame.width
@@ -147,6 +154,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             return
         }
         preview.sourceLine = editorTopLine.line
+        previewTopLine = editorTopLine.line
+    }
+
+    private func previewScrolled(to line: Int) {
+        previewTopLine = line
+        guard syncScrolling, !editorItem.isCollapsed, let url = preview.documentURL else { return }
+        editorTopLine = (url, line)
+        editor.scroll(url, toLine: line)
     }
 
     /// Asks whether to discard unsaved changes in the editor, if there are any. Returns
@@ -182,7 +197,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     }
 
     private func updateSyncScrollingItem() {
-        let title = syncScrolling ? "Stop Following the Editor" : "Follow the Editor"
+        let title = syncScrolling ? "Scroll the Editor and Preview Separately" : "Scroll the Editor and Preview Together"
         syncScrollingItem?.image = NSImage(systemSymbolName: syncScrolling ? "lock" : "lock.open", accessibilityDescription: title)
         syncScrollingItem?.toolTip = title
     }
@@ -316,7 +331,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             return item
         case .syncScrolling:
             let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Follow Editor"
+            item.label = "Sync Scrolling"
             item.isBordered = true
             item.isHidden = editorItem.isCollapsed
             item.target = self

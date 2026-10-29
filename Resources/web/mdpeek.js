@@ -106,6 +106,7 @@ window.mdpeek = (() => {
     welcome.hidden = true;
     content.hidden = false;
     const anchor = preserveScroll ? scrollAnchor() : null;
+    markOwnScroll();
     content.replaceChildren(...container.childNodes);
     if (sourceLine) scrollToSourceLine(sourceLine);
     else if (anchor) restoreScrollAnchor(anchor);
@@ -523,33 +524,90 @@ window.mdpeek = (() => {
     });
   }, { passive: true });
   addEventListener("resize", () => {
+    markOwnScroll();
     if (sourceLine) scrollToSourceLine(sourceLine);
     else if (reflowAnchor) restoreScrollAnchor(reflowAnchor);
   });
 
-  // MARK: Following the editor
+  // MARK: Scrolling with the editor
 
   // The Markdown source line kept at the top of the window while the page follows the
-  // editor, or null. Renders in progress apply it when they finish.
+  // editor, or null once the user scrolls the page. Renders in progress apply it when they
+  // finish.
   let sourceLine = null;
   function followSourceLine(line) {
     sourceLine = line;
-    if (line) scrollToSourceLine(line);
+    if (line) {
+      markOwnScroll();
+      scrollToSourceLine(line);
+    }
   }
 
-  // Scrolls so that Markdown source line `line` is at the top of the window, at the
-  // proportional position within the innermost block that contains it. Elements with
-  // source positions come in document order, which is also the order of their first lines.
+  // Scrolling done by the page itself (following the editor, rendering, reflowing) is not
+  // reported to the editor. Its scroll events arrive before the next animation frame.
+  let ownScroll = false;
+  let reportedLine = null;
+  function markOwnScroll() {
+    ownScroll = true;
+    reportedLine = null;
+    requestAnimationFrame(() => {
+      ownScroll = false;
+    });
+  }
+
+  // Reports the source line at the top of the window as the user scrolls, at most once a
+  // frame, so the editor can follow.
+  let lineReportScheduled = false;
+  addEventListener("scroll", () => {
+    if (ownScroll) return;
+    sourceLine = null;
+    if (lineReportScheduled) return;
+    lineReportScheduled = true;
+    requestAnimationFrame(() => {
+      lineReportScheduled = false;
+      const line = sourceLineAtTop();
+      if (line !== reportedLine) {
+        reportedLine = line;
+        native({ type: "scroll", line });
+      }
+    });
+  }, { passive: true });
+
+  // Source lines map to positions proportionally within the innermost block that contains
+  // them. A diagram stands for the lines between its fences: its top is the first line of
+  // its source and halfway down is halfway through the source. Elements with source
+  // positions come in document order, which is also the order of their first lines and of
+  // their tops.
+  function sourceLines(element) {
+    const [start, end] = element.dataset.sourcepos.match(/^(\d+):\d+-(\d+)/).slice(1).map(Number);
+    const isDiagram = element.matches(".mermaid-figure, .mermaid-error") && end - start >= 2;
+    return isDiagram ? [start + 1, end - 1] : [start, end];
+  }
+
+  // Scrolls so that Markdown source line `line` is at the top of the window.
   function scrollToSourceLine(line) {
     let top = 0;
     for (const element of content.querySelectorAll("[data-sourcepos]")) {
-      const [, start, end] = element.dataset.sourcepos.match(/^(\d+):\d+-(\d+)/).map(Number);
+      const [start, end] = sourceLines(element);
       if (start > line) break;
       const rect = element.getBoundingClientRect();
       if (!rect.height) continue;
       top = rect.top + scrollY + Math.min((line - start) / (end - start + 1), 1) * rect.height;
     }
     window.scrollTo(0, line > 1 ? top : 0);
+  }
+
+  // The Markdown source line at the top of the window: the inverse of scrollToSourceLine.
+  function sourceLineAtTop() {
+    let line = 1;
+    for (const element of content.querySelectorAll("[data-sourcepos]")) {
+      const rect = element.getBoundingClientRect();
+      if (rect.top > 0) break;
+      if (!rect.height) continue;
+      const [start, end] = sourceLines(element);
+      line = start + Math.min(-rect.top / rect.height, 1) * (end - start + 1);
+    }
+    return Math.floor(line);
   }
 
   return { render, showWelcome, scrollToHeading, followSourceLine };

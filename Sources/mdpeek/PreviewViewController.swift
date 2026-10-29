@@ -25,6 +25,8 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     var onOpenMarkdown: ((URL) -> Void)?
     var onOutlineChange: (([Heading]) -> Void)?
     var onSectionChange: ((String?) -> Void)?
+    /// Called with the source line at the top of the view as the user scrolls it.
+    var onScroll: ((Int) -> Void)?
     var onZoomChange: ((CGFloat) -> Void)?
 
     var documentURL: URL? { document?.url }
@@ -193,6 +195,9 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             currentHeadingID = body["id"] as? String
             updateStatusSection()
             onSectionChange?(currentHeadingID)
+        case "scroll":
+            guard let line = (body["line"] as? NSNumber)?.intValue else { return }
+            onScroll?(line)
         case "open":
             NSApp.sendAction(#selector(AppDelegate.openDocument(_:)), to: nil, from: self)
         case "copy":

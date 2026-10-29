@@ -34,6 +34,12 @@ final class EditorConnection {
         }
     }
 
+    private struct Command: Encodable {
+        let command: String
+        let path: String
+        var line: Int?
+    }
+
     let path: String
     var onEvent: ((Event) -> Void)?
     var onError: ((Error) -> Void)?
@@ -75,9 +81,14 @@ final class EditorConnection {
         acceptSource.resume()
     }
 
-    /// Asks Neovim to show the file at `url`.
-    func open(_ url: URL) throws {
-        try send(["command": "open", "path": url.path])
+    /// Asks Neovim to show the file at `url`, with `line` at the top if given.
+    func open(_ url: URL, atLine line: Int?) throws {
+        try send(Command(command: "open", path: url.path, line: line))
+    }
+
+    /// Asks Neovim to scroll a window showing the file at `url` so that `line` is at the top.
+    func scroll(_ url: URL, toLine line: Int) throws {
+        try send(Command(command: "scroll", path: url.path, line: line))
     }
 
     func close() {
@@ -87,7 +98,7 @@ final class EditorConnection {
         connection = nil
     }
 
-    private func send(_ message: [String: String]) throws {
+    private func send(_ message: Command) throws {
         let data = try JSONEncoder().encode(message) + Data("\n".utf8)
         if let connection {
             try connection.write(contentsOf: data)

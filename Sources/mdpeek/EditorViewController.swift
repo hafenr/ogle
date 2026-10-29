@@ -24,14 +24,24 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
         view = NSView()
     }
 
-    /// Shows the file at `url` in Neovim, starting Neovim if it is not running.
-    func open(_ url: URL) {
+    /// Shows the file at `url` in Neovim, with `line` at the top if given, starting Neovim if
+    /// it is not running. Without a line, Neovim reports where it shows the file.
+    func open(_ url: URL, atLine line: Int?) {
         do {
             if let session {
-                try session.connection.open(url)
+                try session.connection.open(url, atLine: line)
             } else {
-                try start(with: url)
+                try start(with: url, atLine: line)
             }
+        } catch {
+            presentError(error)
+        }
+    }
+
+    /// Scrolls Neovim, if it shows the file at `url`, so that `line` is at the top.
+    func scroll(_ url: URL, toLine line: Int) {
+        do {
+            try session?.connection.scroll(url, toLine: line)
         } catch {
             presentError(error)
         }
@@ -45,7 +55,7 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
         end()
     }
 
-    private func start(with url: URL) throws {
+    private func start(with url: URL, atLine line: Int?) throws {
         let connection = try EditorConnection()
         connection.onEvent = { [weak self] event in
             switch event {
@@ -74,6 +84,9 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
             terminal.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             terminal.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        // Neovim starts at the terminal's final size, so it keeps the line it is asked to show at
+        // the top, rather than moving it when the terminal is resized.
+        view.layoutSubtreeIfNeeded()
         session = (terminal, connection)
 
         let resources = Bundle.main.resourceURL!
@@ -84,7 +97,7 @@ final class EditorViewController: NSViewController, LocalProcessTerminalViewDele
             "MDPEEK_LUA=\(resources.appending(path: "mdpeek.lua").path)",
             "MDPEEK_SOCKET=\(connection.path)",
             "MDPEEK_FILE=\(url.path)",
-        ]
+        ] + (line.map { ["MDPEEK_LINE=\($0)"] } ?? [])
         // Through an interactive login shell, as in a terminal, so that Neovim and its plugins
         // find the user's tools on the PATH.
         terminal.startProcess(
