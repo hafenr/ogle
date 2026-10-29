@@ -15,19 +15,34 @@
 </head>
 <body>
 <section id="welcome" hidden>
-  <img src="icon.svg" width="112" height="112" alt="">
-  <h1>Peek at any Markdown file</h1>
-  <div class="drop-zone">
-    <p>Drop a .md file here</p>
-    <button type="button" class="primary" data-action="open">Open File…</button>
+  <div class="welcome-grid">
+    <section class="start" aria-labelledby="start-title">
+      <img src="icon.svg" width="104" height="104" alt="">
+      <h1 id="start-title">Peek at any Markdown file</h1>
+      <div class="drop-zone">
+        <p>Drop a .md file here</p>
+        <button type="button" class="primary" data-action="open">Open File…</button>
+      </div>
+      <p class="hint">From a terminal: <code>mdpeek README.md</code></p>
+    </section>
+    <section class="quick" aria-labelledby="quick-title">
+      <div class="quick-header">
+        <h2 id="quick-title">Open Quickly</h2>
+        <kbd>⇧⌘O</kbd>
+      </div>
+      <div class="quick-search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg>
+        <input id="quick-search" type="search" placeholder="Search recent files and folders" aria-label="Search recent files" aria-controls="quick-list" autocomplete="off" spellcheck="false">
+      </div>
+      <ul id="quick-list" role="listbox" aria-label="Recent files"></ul>
+      <p id="quick-empty" hidden>Files you open show up here.</p>
+      <div class="quick-footer">
+        <span><kbd>↩</kbd> Open</span>
+        <span><kbd>⌥↩</kbd> Open with Neovim</span>
+        <span><kbd>⌘⌫</kbd> Remove from list</span>
+      </div>
+    </section>
   </div>
-  <ul class="shortcuts">
-    <li><kbd>⌘O</kbd> Open</li>
-    <li><kbd>⌘F</kbd> Find</li>
-    <li><kbd>⌃⌘S</kbd> Sidebar</li>
-    <li><kbd>⌘+</kbd> Zoom</li>
-    <li>From a terminal: <code>mdpeek README.md</code></li>
-  </ul>
 </section>
 <article id="content" class="markdown-body"></article>
 </body>

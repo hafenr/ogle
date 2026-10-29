@@ -324,23 +324,45 @@ body {
   }
 }
 
-/* Start page. */
+/* Start page: the drop zone beside the Open Quickly card. */
+:root {
+  --paper: #fafaf7;
+}
+
+body:has(#welcome:not([hidden])) {
+  background: var(--paper);
+}
+
 #welcome {
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
   min-height: 100vh;
-  padding: 32px 16px 56px;
+  padding: 24px 24px 48px;
   color: var(--ink);
-  font: 13px -apple-system, BlinkMacSystemFont, sans-serif;
-  text-align: center;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 #welcome[hidden] {
   display: none;
+}
+
+#welcome .welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 980px;
+}
+
+#welcome .start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
 }
 
 #welcome h1 {
@@ -357,9 +379,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  width: min(560px, 100%);
+  width: 100%;
+  max-width: 420px;
   height: 168px;
-  border: 1.5px dashed #b9bfcc;
+  border: 1.5px dashed #9aa1ae;
   border-radius: 14px;
   transition: border-color 120ms, background-color 120ms;
 }
@@ -369,9 +392,14 @@ body.dragging #welcome .drop-zone {
   background: rgb(198 240 90 / 0.18);
 }
 
-#welcome .drop-zone p {
+#welcome .drop-zone p,
+#welcome .hint {
   margin: 0;
-  color: var(--muted);
+  color: #4f5661;
+}
+
+#welcome .hint {
+  font-size: 12px;
 }
 
 #welcome button.primary {
@@ -390,18 +418,6 @@ body.dragging #welcome .drop-zone {
   outline-offset: 2px;
 }
 
-#welcome .shortcuts {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 22px;
-  margin: 0;
-  padding: 0;
-  color: var(--muted);
-  font-size: 12px;
-  list-style: none;
-}
-
 #welcome kbd,
 #welcome code {
   padding: 2px 6px;
@@ -412,15 +428,161 @@ body.dragging #welcome .drop-zone {
 }
 
 #welcome kbd {
-  margin-right: 4px;
   border-bottom-width: 2px;
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#welcome .quick {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e2e2dc;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(35 38 43 / 0.06);
+}
+
+#welcome .quick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+
+#welcome .quick h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#welcome .quick-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 12px 8px;
+}
+
+#welcome .quick svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#welcome .quick-search svg {
+  position: absolute;
+  left: 10px;
+  color: #5c5c63;
+}
+
+#welcome .quick-search input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 32px;
+  border: 1px solid #d6d6da;
+  border-radius: 8px;
+  color: inherit;
+  background: #ffffff;
+  font: inherit;
+}
+
+#welcome .quick-search input:focus {
+  border-color: var(--ink);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+#quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0 8px 8px;
+  list-style: none;
+}
+
+#quick-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: #5c5c63;
+  cursor: default;
+}
+
+#quick-list li[aria-selected="true"] {
+  color: #3a3f47;
+  background: var(--lime);
+}
+
+#quick-list .quick-text {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+#quick-list .quick-name {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+#quick-list li[aria-selected="true"] .quick-name {
+  font-weight: 600;
+}
+
+#quick-list .quick-folder {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#quick-list .quick-when {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#quick-empty {
+  margin: 0;
+  padding: 8px 16px 16px;
+  color: #5c5c63;
+}
+
+#welcome .quick-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 10px 16px;
+  border-top: 1px solid #ececea;
+  color: #4f5661;
+  background: var(--paper);
+  font-size: 11px;
+}
+
+#welcome .quick-footer span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
+  body:has(#welcome:not([hidden])) {
+    background: #0d1117;
+  }
+
   #welcome,
   #welcome kbd,
-  #welcome code {
+  #welcome code,
+  #quick-list .quick-name {
     color: #e6edf3;
   }
 
@@ -432,9 +594,44 @@ body.dragging #welcome .drop-zone {
     border-color: var(--lime);
   }
 
+  #welcome .drop-zone p,
+  #welcome .hint,
+  #welcome .quick-footer,
+  #quick-list li,
+  #quick-empty {
+    color: #9198a1;
+  }
+
   #welcome button.primary {
     color: var(--ink);
     background: var(--lime);
+  }
+
+  #welcome .quick {
+    border-color: #3d444d;
+    background: #161b22;
+    box-shadow: none;
+  }
+
+  #welcome .quick-search input {
+    border-color: #3d444d;
+    background: #0d1117;
+  }
+
+  #welcome .quick-search input:focus {
+    border-color: #e6edf3;
+    box-shadow: 0 0 0 1px #e6edf3;
+  }
+
+  #welcome .quick-footer {
+    border-top-color: #3d444d;
+    background: #0d1117;
+  }
+
+  /* Ink on lime in either appearance. */
+  #quick-list li[aria-selected="true"],
+  #quick-list li[aria-selected="true"] .quick-name {
+    color: var(--ink);
   }
 }
 

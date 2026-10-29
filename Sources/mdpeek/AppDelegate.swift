@@ -48,6 +48,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let fileMenu = submenu(of: mainMenu, title: "File")
         fileMenu.addItem(withTitle: "Open…", action: #selector(openDocument(_:)), keyEquivalent: "o")
+        fileMenu.addItem(withTitle: "Open Quickly…", action: #selector(MainWindowController.openQuickly(_:)), keyEquivalent: "o")
+            .keyEquivalentModifierMask = [.command, .shift]
         fileMenu.addItem(withTitle: "Open in Editor", action: #selector(MainWindowController.openInEditor(_:)), keyEquivalent: "o")
             .keyEquivalentModifierMask = [.command, .option]
         fileMenu.addItem(.separator())

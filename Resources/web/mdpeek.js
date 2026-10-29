@@ -134,6 +134,96 @@ window.mdpeek = (() => {
   welcome.addEventListener("click", (event) => {
     if (event.target.closest("[data-action=open]")) native({ type: "open" });
   });
+  // The Open Quickly card: the five most recent files matching the search, from the list the
+  // app sends. Return opens the selected one, Option-Return with the editor shown,
+  // Command-Delete removes it from the list.
+  const quickSearch = document.getElementById("quick-search");
+  const quickList = document.getElementById("quick-list");
+  let recentFiles = [];
+  let quickFiles = [];
+  let quickSelection = 0;
+  const FILE_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3.5 3.5v9.5H4z"></path><path d="M9 1.5V5h3.5"></path></svg>';
+
+  function setRecentFiles(files) {
+    const selected = quickFiles[quickSelection]?.path;
+    recentFiles = files;
+    renderQuickList(selected);
+  }
+
+  function renderQuickList(selectedPath) {
+    const query = quickSearch.value.trim().toLowerCase();
+    quickFiles = recentFiles
+      .filter((file) => !query || file.name.toLowerCase().includes(query) || file.folder.toLowerCase().includes(query))
+      .slice(0, 5);
+    const index = quickFiles.findIndex((file) => file.path === selectedPath);
+    quickSelection = index >= 0 ? index : Math.min(quickSelection, Math.max(quickFiles.length - 1, 0));
+    quickList.replaceChildren(...quickFiles.map((file, i) => {
+      const item = document.createElement("li");
+      item.id = `quick-${i}`;
+      item.setAttribute("role", "option");
+      item.setAttribute("aria-selected", String(i === quickSelection));
+      item.title = file.path;
+      item.innerHTML = FILE_ICON;
+      const text = document.createElement("span");
+      text.className = "quick-text";
+      const name = document.createElement("span");
+      name.className = "quick-name";
+      name.textContent = file.name;
+      const folder = document.createElement("span");
+      folder.className = "quick-folder";
+      folder.textContent = file.folder;
+      text.append(name, folder);
+      const when = document.createElement("span");
+      when.className = "quick-when";
+      when.textContent = file.when;
+      item.append(text, when);
+      item.addEventListener("mousemove", () => selectQuick(i));
+      item.addEventListener("click", (event) => openQuick(event.altKey));
+      return item;
+    }));
+    quickSearch.setAttribute("aria-activedescendant", quickFiles.length ? `quick-${quickSelection}` : "");
+    document.getElementById("quick-empty").hidden = recentFiles.length > 0;
+  }
+
+  function selectQuick(index) {
+    if (index === quickSelection) return;
+    quickList.children[quickSelection]?.setAttribute("aria-selected", "false");
+    quickSelection = index;
+    quickList.children[index]?.setAttribute("aria-selected", "true");
+    quickSearch.setAttribute("aria-activedescendant", `quick-${index}`);
+  }
+
+  function openQuick(withEditor) {
+    const file = quickFiles[quickSelection];
+    if (file) native({ type: "openRecent", path: file.path, withEditor });
+  }
+
+  quickSearch.addEventListener("input", () => {
+    quickSelection = 0;
+    renderQuickList();
+  });
+  quickSearch.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (quickFiles.length) selectQuick((quickSelection + (event.key === "ArrowDown" ? 1 : quickFiles.length - 1)) % quickFiles.length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      openQuick(event.altKey);
+    } else if (event.key === "Backspace" && event.metaKey) {
+      event.preventDefault();
+      const file = quickFiles[quickSelection];
+      if (file) native({ type: "removeRecent", path: file.path });
+    } else if (event.key === "Escape" && quickSearch.value) {
+      quickSearch.value = "";
+      renderQuickList();
+    }
+  });
+
+  function focusOpenQuickly() {
+    quickSearch.focus();
+    quickSearch.select();
+  }
+
   // Highlights the drop zone while a file is dragged over the window; the drop itself
   // is handled by the app.
   let dragDepth = 0;
@@ -834,5 +924,5 @@ window.mdpeek = (() => {
     return Math.floor(line);
   }
 
-  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind, showUnsavedNotice, setCursorLine };
+  return { render, showWelcome, scrollToHeading, followSourceLine, sourceLineAtTop, find, findNext, clearFind, showUnsavedNotice, setCursorLine, setRecentFiles, focusOpenQuickly };
 })();

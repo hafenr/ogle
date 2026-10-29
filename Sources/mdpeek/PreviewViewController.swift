@@ -8,6 +8,15 @@ struct Heading: Equatable {
     let title: String
 }
 
+/// A recently opened file, as the start page lists it.
+struct RecentFile {
+    let path: String
+    let name: String
+    let folder: String
+    /// When it was opened: "now", "2h", "Yesterday", …
+    let when: String
+}
+
 @MainActor
 final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
     private let pageURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")!
@@ -33,6 +42,13 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     /// Called with the current section as the status bar shows it: "Download · 3 of 9".
     var onSectionTextChange: ((String?) -> Void)?
     var onFindBarChange: ((Bool) -> Void)?
+    /// Called with a file picked on the start page and whether to show the editor too.
+    var onOpenRecent: ((URL, Bool) -> Void)?
+    var onRemoveRecent: ((URL) -> Void)?
+    /// The recent files the start page lists.
+    var recentFiles: [RecentFile] = [] {
+        didSet { sendRecentFiles() }
+    }
 
     var documentURL: URL? { document?.url }
     /// The source line kept at the top of the view while it follows the editor.
@@ -150,6 +166,19 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
         guard isPageLoaded, document != nil else { return nil }
         let line = try? await webView.callAsyncJavaScript("return mdpeek.sourceLineAtTop()", contentWorld: .page)
         return (line as? NSNumber)?.intValue
+    }
+
+    private func sendRecentFiles() {
+        guard isPageLoaded else { return }
+        let files = recentFiles.map { ["path": $0.path, "name": $0.name, "folder": $0.folder, "when": $0.when] }
+        webView.callAsyncJavaScript("mdpeek.setRecentFiles(files)", arguments: ["files": files], in: nil, in: .page)
+    }
+
+    /// Focuses the search field of the start page's Open Quickly card.
+    func focusOpenQuickly() {
+        guard isPageLoaded, document == nil else { return }
+        view.window?.makeFirstResponder(webView)
+        webView.callAsyncJavaScript("mdpeek.focusOpenQuickly()", in: nil, in: .page)
     }
 
     func scrollToHeading(_ id: String) {
@@ -277,6 +306,12 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
             findBar.setResult(index: index, count: count)
         case "escape":
             hideFindBar()
+        case "openRecent":
+            guard let path = body["path"] as? String else { return }
+            onOpenRecent?(URL(fileURLWithPath: path), body["withEditor"] as? Bool ?? false)
+        case "removeRecent":
+            guard let path = body["path"] as? String else { return }
+            onRemoveRecent?(URL(fileURLWithPath: path))
         case "scroll":
             guard let line = (body["line"] as? NSNumber)?.intValue else { return }
             onScroll?(line)
@@ -308,6 +343,7 @@ final class PreviewViewController: NSViewController, WKNavigationDelegate, WKScr
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard !isPageLoaded else { return }
         isPageLoaded = true
+        sendRecentFiles()
         if showsUnsavedNotice {
             webView.callAsyncJavaScript("mdpeek.showUnsavedNotice(true)", in: nil, in: .page)
         }

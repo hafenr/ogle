@@ -8,7 +8,7 @@ final class RecentFiles {
 
     private(set) var urls: [URL]
     private var dates: [String: Date]
-    var onChange: (() -> Void)?
+    private var observers: [() -> Void] = []
 
     init() {
         urls = (UserDefaults.standard.stringArray(forKey: Self.defaultsKey) ?? [])
@@ -20,6 +20,11 @@ final class RecentFiles {
     /// When the file was last opened in mdpeek (unknown for entries recorded by older versions).
     func lastOpened(_ url: URL) -> Date? {
         dates[url.path]
+    }
+
+    /// Calls `observer` whenever the list changes.
+    func observe(_ observer: @escaping () -> Void) {
+        observers.append(observer)
     }
 
     func add(_ url: URL) {
@@ -40,6 +45,19 @@ final class RecentFiles {
         dates = dates.filter { paths.contains($0.key) }
         UserDefaults.standard.set(paths, forKey: Self.defaultsKey)
         UserDefaults.standard.set(dates, forKey: Self.datesKey)
-        onChange?()
+        observers.forEach { $0() }
+    }
+
+    /// When a file was opened, as the lists of recent files show it: "now", "5m", "3h",
+    /// "Yesterday", "Mon", "Oct 14".
+    nonisolated static func shortDate(_ date: Date) -> String {
+        let seconds = Date().timeIntervalSince(date)
+        let calendar = Calendar.current
+        if seconds < 60 { return "now" }
+        if seconds < 3600 { return "\(Int(seconds / 60))m" }
+        if calendar.isDateInToday(date) { return "\(Int(seconds / 3600))h" }
+        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        if seconds < 6 * 86400 { return date.formatted(.dateTime.weekday(.abbreviated)) }
+        return date.formatted(.dateTime.month(.abbreviated).day())
     }
 }

@@ -15,7 +15,7 @@ A native macOS viewer for Markdown files with embedded Mermaid diagrams, rendere
 - A slim toolbar: Find, the editor toggle, and a More menu with Open in Editor (⌥⌘O, the default app for the file other than mdpeek), Share, Export as PDF (⇧⌘E) and Print (⌘P). Zoom with ⌘+ / ⌘− / ⌘0, the View menu or the status bar.
 - Find bar (⌘F) between the toolbar and the preview: shows the number of matches (“2 of 8”), highlights all of them and the current one more strongly, and goes through them with Return / ⇧Return, ⌘G / ⇧⌘G or the arrow buttons. Aa matches case. Done or Esc closes it.
 - Status bar below the preview (and the editor) with word count, reading time and the current section, the zoom control (− 100% +), and, while the editor is shown, the Linked toggle.
-- A start page while no file is open: drop a file on the window or use Open File….
+- A start page while no file is open: drop a file on the window or use Open File…, or pick one of your five most recent files in the Open Quickly card (search them by name or folder; Return opens the selected file, ⌥Return opens it with the editor, ⌘⌫ removes it from the list). ⇧⌘O (File › Open Quickly…) focuses the card, or opens the same list as a sheet over an open document.
 - Light and dark mode follow the system.
 
 ## Installation

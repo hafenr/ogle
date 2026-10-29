@@ -81,7 +81,7 @@ final class SidebarViewController: NSViewController, NSTableViewDataSource, NSTa
         container.frame.size.width = 260
         view = container
 
-        recents.onChange = { [weak self] in self?.reload() }
+        recents.observe { [weak self] in self?.reload() }
         setMode(current == nil ? .files : .outline)
     }
 
@@ -283,20 +283,8 @@ private final class FileCell: NSTableCellView {
     func show(_ url: URL, lastOpened: Date?) {
         name.stringValue = url.lastPathComponent
         directory.stringValue = (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
-        date.stringValue = lastOpened.map(Self.shortDate) ?? ""
+        date.stringValue = lastOpened.map(RecentFiles.shortDate) ?? ""
         toolTip = url.path
-    }
-
-    /// "now", "5m", "3h", "Yesterday", "Mon", "Oct 14".
-    nonisolated private static func shortDate(_ date: Date) -> String {
-        let seconds = Date().timeIntervalSince(date)
-        let calendar = Calendar.current
-        if seconds < 60 { return "now" }
-        if seconds < 3600 { return "\(Int(seconds / 60))m" }
-        if calendar.isDateInToday(date) { return "\(Int(seconds / 3600))h" }
-        if calendar.isDateInYesterday(date) { return "Yesterday" }
-        if seconds < 6 * 86400 { return date.formatted(.dateTime.weekday(.abbreviated)) }
-        return date.formatted(.dateTime.month(.abbreviated).day())
     }
 }
 

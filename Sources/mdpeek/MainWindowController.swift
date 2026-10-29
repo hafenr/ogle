@@ -103,6 +103,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
             self?.updateCursorLine()
         }
         preview.onScroll = { [weak self] line in self?.previewScrolled(to: line) }
+        preview.onOpenRecent = { [weak self] url, withEditor in self?.openRecent(url, withEditor: withEditor) }
+        preview.onRemoveRecent = { [weak self] url in self?.recents.remove(url) }
+        recents.observe { [weak self] in self?.sendRecentFiles() }
+        sendRecentFiles()
         preview.onFindBarChange = { [weak self] shown in self?.findButton?.state = shown ? .on : .off }
     }
 
@@ -113,6 +117,29 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
         if show(url) {
             recents.add(url)
         }
+    }
+
+    /// Opens a file from the recent files, showing the editor too if asked.
+    private func openRecent(_ url: URL, withEditor: Bool) {
+        open(url)
+        if withEditor, preview.documentURL == url.standardizedFileURL, editorItem.isCollapsed {
+            setEditorVisible(true)
+        }
+    }
+
+    /// Gives the start page the recent files, with when each was opened as the sidebar shows it.
+    private func sendRecentFiles() {
+        preview.recentFiles = recents.urls.map { url in
+            RecentFile(
+                path: url.path, name: url.lastPathComponent,
+                folder: (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath,
+                when: recents.lastOpened(url).map(RecentFiles.shortDate) ?? "")
+        }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        // Keeps "5m", "2h" current on the start page.
+        if preview.documentURL == nil { sendRecentFiles() }
     }
 
     @discardableResult
@@ -310,6 +337,19 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSToolba
     /// Shows the zoom level of what zooming applies to.
     private func updateZoomLabel() {
         statusBar.setZoom(zoomsEditor ? editor.zoom : preview.zoom)
+    }
+
+    /// The recent files: in the start page's card while no document is open, otherwise in a sheet.
+    @objc func openQuickly(_ sender: Any?) {
+        guard preview.documentURL != nil else {
+            preview.focusOpenQuickly()
+            return
+        }
+        guard let contentViewController = window?.contentViewController, contentViewController.presentedViewControllers?.isEmpty ?? true
+        else { return }
+        let sheet = OpenQuicklyViewController(recents: recents)
+        sheet.onOpen = { [weak self] url, withEditor in self?.openRecent(url, withEditor: withEditor) }
+        contentViewController.presentAsSheet(sheet)
     }
 
     @objc func showFind(_ sender: Any?) {
